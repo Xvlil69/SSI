@@ -330,7 +330,6 @@ export default function Admin() {
     { id: 'produits', label: 'Produits', icon: '🗂' },
     { id: 'categories', label: 'Rubriques', icon: '📁' },
     { id: 'boutique_preview', label: 'Voir boutique', icon: '👁' },
-    { id: 'caisse', label: 'Caisse POS', icon: '🖥' },
     { id: 'action', label: 'Actions', icon: '⚡' },
     { id: 'events', label: 'Évents', icon: '🛒' },
     { id: 'factures', label: 'Factures', icon: '📄' },

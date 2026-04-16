@@ -1,9 +1,9 @@
 import { useState, useEffect, useMemo } from 'react'
 import Head from 'next/head'
 import { supabase } from '../lib/supabase'
- 
+
 const WHATSAPP = '221777042635'
- 
+
 function ImageViewer({ src, alt, onClose }) {
   useEffect(() => {
     const h = e => { if (e.key === 'Escape') onClose() }
@@ -19,7 +19,7 @@ function ImageViewer({ src, alt, onClose }) {
     </div>
   )
 }
- 
+
 function ProductModal({ product, onClose, onImageClick, dark }) {
   if (!product) return null
   useEffect(() => {
@@ -73,7 +73,7 @@ function ProductModal({ product, onClose, onImageClick, dark }) {
     </div>
   )
 }
- 
+
 function ProductCard({ product, onClick, onImageClick, index, dark }) {
   const border = dark ? '#2d3148' : '#e8eef4'
   const bg = dark ? '#1a1d27' : '#fff'
@@ -93,7 +93,7 @@ function ProductCard({ product, onClick, onImageClick, index, dark }) {
               <span style={{ fontSize: '2.5rem', opacity: 0.2 }}>💻</span>
               <span style={{ fontSize: '0.72rem', color: '#aaa', fontWeight: 500 }}>Pas d'image</span>
             </div>}
-        <span style={{ position: 'absolute', top: 10, left: 10, background: '#16a34a', color: '#fff', fontSize: '0.6rem', fontWeight: 800, padding: '3px 8px', borderRadius: 6, letterSpacing: '0.06em', boxShadow: '0 2px 6px rgba(22,163,74,0.4)' }}>DISPO</span>
+        <span style={{ position: 'absolute', top: 10, left: 10, background: product.status === 'rupture' ? '#dc2626' : '#16a34a', color: '#fff', fontSize: '0.6rem', fontWeight: 800, padding: '3px 8px', borderRadius: 6, letterSpacing: '0.06em', boxShadow: product.status === 'rupture' ? '0 2px 6px rgba(220,38,38,0.4)' : '0 2px 6px rgba(22,163,74,0.4)' }}>{product.status === 'rupture' ? 'RUPTURE' : 'DISPO'}</span>
       </div>
       <div style={{ padding: '14px 14px 16px', display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
         <h3 style={{ fontSize: '0.92rem', fontWeight: 700, color: text, lineHeight: 1.35, margin: 0 }}>{product.name}</h3>
@@ -106,16 +106,16 @@ function ProductCard({ product, onClick, onImageClick, index, dark }) {
           <div style={{ fontSize: '1.15rem', fontWeight: 900, color: '#1a56db', letterSpacing: '-0.01em', marginBottom: 10 }}>
             {product.price.toLocaleString('fr-FR')} <span style={{ fontSize: '0.75rem', fontWeight: 600, color: tag2 }}>FCFA</span>
           </div>
-          <button onClick={e => { e.stopPropagation(); const msg = encodeURIComponent(`Bonjour SSI,\nJe suis intéressé par *${product.name}*${product.storage ? ' - ' + product.storage : ''} à *${product.price.toLocaleString('fr-FR')} FCFA*.\n\nEst-il disponible ?`); window.open(`https://wa.me/${product.whatsapp_number || WHATSAPP}?text=${msg}`, '_blank') }}
-            style={{ width: '100%', background: 'linear-gradient(135deg,#16a34a,#15803d)', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 12px', fontSize: '0.82rem', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, cursor: 'pointer', boxShadow: '0 2px 8px rgba(22,163,74,0.3)', transition: 'transform 0.15s' }}>
-            <span>💬</span> Contacter sur WhatsApp
+          <button onClick={e => { e.stopPropagation(); if (product.status === 'rupture') return; const msg = encodeURIComponent(`Bonjour SSI,\nJe suis intéressé par *${product.name}*${product.storage ? ' - ' + product.storage : ''} à *${product.price.toLocaleString('fr-FR')} FCFA*.\n\nEst-il disponible ?`); window.open(`https://wa.me/${product.whatsapp_number || WHATSAPP}?text=${msg}`, '_blank') }}
+            style={{ width: '100%', background: product.status === 'rupture' ? '#e2e8f0' : 'linear-gradient(135deg,#16a34a,#15803d)', color: product.status === 'rupture' ? '#94a3b8' : '#fff', border: 'none', borderRadius: 10, padding: '10px 12px', fontSize: '0.82rem', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, cursor: product.status === 'rupture' ? 'not-allowed' : 'pointer', boxShadow: product.status === 'rupture' ? 'none' : '0 2px 8px rgba(22,163,74,0.3)', transition: 'transform 0.15s' }}>
+            {product.status === 'rupture' ? '🔴 Rupture de stock' : <><span>💬</span> Contacter sur WhatsApp</>}
           </button>
         </div>
       </div>
     </div>
   )
 }
- 
+
 export default function Catalogue() {
   const [categories, setCategories] = useState([])
   const [produits, setProduits] = useState([])
@@ -127,26 +127,26 @@ export default function Catalogue() {
   const [showHero, setShowHero] = useState(true)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [dark, setDark] = useState(false)
- 
+
   useEffect(() => {
     try { const d = localStorage.getItem('ssi_dark_client'); if (d !== null) setDark(JSON.parse(d)) } catch {}
   }, [])
- 
+
   useEffect(() => {
     try { localStorage.setItem('ssi_dark_client', JSON.stringify(dark)) } catch {}
   }, [dark])
- 
+
   const load = async () => {
     const [{ data: cats }, { data: prods }] = await Promise.all([
       supabase.from('categories').select('*').order('ordre'),
-      supabase.from('produits').select('*').eq('status', 'publie').order('created_at', { ascending: false })
+      supabase.from('produits').select('*').in('status', ['publie', 'rupture']).order('created_at', { ascending: false })
     ])
     setCategories(cats || [])
     setProduits(prods || [])
     if (cats && cats.length > 0) setActiveCategory(cats[0].id)
     setLoading(false)
   }
- 
+
   useEffect(() => {
     load()
     const channel = supabase.channel('realtime-produits')
@@ -154,7 +154,7 @@ export default function Catalogue() {
       .subscribe()
     return () => supabase.removeChannel(channel)
   }, [])
- 
+
   const filtered = useMemo(() => {
     let list = activeCategory && !showHero ? produits.filter(p => p.category_id === activeCategory) : produits
     if (search.trim()) {
@@ -163,9 +163,9 @@ export default function Catalogue() {
     }
     return list
   }, [produits, activeCategory, search, showHero])
- 
+
   const catCount = id => produits.filter(p => p.category_id === id).length
- 
+
   // Dark mode colors
   const D = {
     bg: dark ? '#0f1117' : '#f8fafc',
@@ -178,7 +178,7 @@ export default function Catalogue() {
     text3: dark ? '#64748b' : '#94a3b8',
     tabBg: dark ? '#2d3148' : '#f1f5f9',
   }
- 
+
   if (loading) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: D.bg }}>
       <div style={{ textAlign: 'center', fontFamily: 'system-ui,sans-serif' }}>
@@ -188,7 +188,7 @@ export default function Catalogue() {
       </div>
     </div>
   )
- 
+
   const sidebar = (
     <aside style={{ width: 230, minWidth: 230, background: D.surface, borderRight: `1px solid ${D.border}`, display: 'flex', flexDirection: 'column', height: '100vh', position: 'sticky', top: 0, overflowY: 'auto', transition: 'background 0.25s,border-color 0.25s' }}>
       <div style={{ padding: '20px 16px 16px', borderBottom: `1px solid ${D.border2}` }}>
@@ -202,14 +202,14 @@ export default function Catalogue() {
           </div>
         </div>
       </div>
- 
+
       <nav style={{ flex: 1, padding: '10px 8px' }}>
         <div style={{ fontSize: '0.65rem', fontWeight: 700, color: D.text3, textTransform: 'uppercase', letterSpacing: '0.1em', padding: '8px 8px 6px' }}>Navigation</div>
         <button onClick={() => { setShowHero(true); setActiveCategory(categories[0]?.id); setSidebarOpen(false) }}
           style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, background: showHero ? (dark ? 'rgba(26,86,219,0.2)' : 'linear-gradient(135deg,#eff6ff,#e0f2fe)') : 'none', border: showHero ? '1px solid #bfdbfe' : '1px solid transparent', color: showHero ? '#3b82f6' : D.text2, fontSize: '0.875rem', fontWeight: showHero ? 700 : 500, cursor: 'pointer', width: '100%', textAlign: 'left', marginBottom: 2, transition: 'all 0.15s' }}>
           <span style={{ fontSize: '1.1rem' }}>🏪</span> Boutique
         </button>
- 
+
         <div style={{ fontSize: '0.65rem', fontWeight: 700, color: D.text3, textTransform: 'uppercase', letterSpacing: '0.1em', padding: '12px 8px 6px', marginTop: 4 }}>Catégories</div>
         {categories.filter(c => catCount(c.id) > 0).map(cat => {
           const isActive = activeCategory === cat.id && !showHero
@@ -223,7 +223,7 @@ export default function Catalogue() {
           )
         })}
       </nav>
- 
+
       <div style={{ padding: '12px 8px', borderTop: `1px solid ${D.border2}`, display: 'flex', flexDirection: 'column', gap: 6 }}>
         {/* Dark mode toggle */}
         <button onClick={() => setDark(d => !d)}
@@ -244,7 +244,7 @@ export default function Catalogue() {
       </div>
     </aside>
   )
- 
+
   return (
     <>
       <Head>
@@ -253,10 +253,10 @@ export default function Catalogue() {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
       </Head>
- 
+
       <div style={{ display: 'flex', minHeight: '100vh', background: D.bg, fontFamily: "'Plus Jakarta Sans',system-ui,sans-serif", transition: 'background 0.25s' }}>
         <div className="sidebar-wrap">{sidebar}</div>
- 
+
         <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', background: D.surface, transition: 'background 0.25s' }}>
           {/* Mobile topbar */}
           <div className="mobile-topbar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: D.surface, borderBottom: `1px solid ${D.border}`, position: 'sticky', top: 0, zIndex: 100, boxShadow: dark ? '0 1px 8px rgba(0,0,0,0.3)' : '0 1px 8px rgba(0,0,0,0.06)' }}>
@@ -277,7 +277,7 @@ export default function Catalogue() {
               </a>
             </div>
           </div>
- 
+
           {/* Desktop header */}
           <div className="desktop-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 28px', borderBottom: `1px solid ${D.border}`, background: D.surface }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
@@ -293,7 +293,7 @@ export default function Catalogue() {
               <span>💬</span> WhatsApp
             </a>
           </div>
- 
+
           {/* Search */}
           <div style={{ padding: '14px 28px', borderBottom: `1px solid ${D.border}`, background: D.surface2 }}>
             <div style={{ position: 'relative', maxWidth: 560 }}>
@@ -305,7 +305,7 @@ export default function Catalogue() {
                 onBlur={e => { e.target.style.borderColor = D.border; e.target.style.boxShadow = '' }} />
             </div>
           </div>
- 
+
           {/* Category tabs */}
           <div style={{ display: 'flex', overflowX: 'auto', padding: '0 28px', borderBottom: `2px solid ${D.border2}`, background: D.surface, gap: 0 }}>
             {categories.filter(c => catCount(c.id) > 0).map(cat => {
@@ -319,7 +319,7 @@ export default function Catalogue() {
               )
             })}
           </div>
- 
+
           {/* Hero */}
           {showHero && (
             <div style={{ background: 'linear-gradient(135deg,#0f172a 0%,#1e3a5f 50%,#0f2d1a 100%)', margin: '20px 28px', borderRadius: 20, padding: '36px 36px 32px', color: '#fff', position: 'relative', overflow: 'hidden' }}>
@@ -361,12 +361,12 @@ export default function Catalogue() {
               </div>
             </div>
           )}
- 
+
           <div style={{ padding: '10px 28px', fontSize: '0.82rem', color: D.text2, fontWeight: 600 }}>
             {filtered.length} article{filtered.length > 1 ? 's' : ''}
             {search && <span style={{ color: D.text3, fontWeight: 400 }}> pour « {search} »</span>}
           </div>
- 
+
           {filtered.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '60px 20px', color: D.text3 }}>
               <div style={{ fontSize: '3rem', marginBottom: 12, opacity: 0.4 }}>📦</div>
@@ -382,7 +382,7 @@ export default function Catalogue() {
               ))}
             </div>
           )}
- 
+
           <footer style={{ background: 'linear-gradient(135deg,#0f172a,#1e3a5f)', color: '#fff', padding: '24px 28px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -399,7 +399,7 @@ export default function Catalogue() {
             </div>
           </footer>
         </div>
- 
+
         {sidebarOpen && (
           <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex' }} onClick={() => setSidebarOpen(false)}>
             <div style={{ width: 260 }} onClick={e => e.stopPropagation()}>{sidebar}</div>
@@ -407,10 +407,10 @@ export default function Catalogue() {
           </div>
         )}
       </div>
- 
+
       {selected && <ProductModal product={selected} onClose={() => setSelected(null)} onImageClick={(src, alt) => setZoomedImage({ src, alt })} dark={dark} />}
       {zoomedImage && <ImageViewer src={zoomedImage.src} alt={zoomedImage.alt} onClose={() => setZoomedImage(null)} />}
- 
+
       <style>{`
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Plus Jakarta Sans',system-ui,sans-serif; transition: background 0.25s; }

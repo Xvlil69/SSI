@@ -74,7 +74,7 @@ function GestionProduits({ categories }) {
     await supabase.from('produits').update({ status: newStatus }).eq('id', product.id)
     load()
     if (newStatus === 'publie') {
-      const msg = encodeURIComponent(`🆕 *Nouveau produit disponible chez SSI !*\n\n💻 *${product.name}*${product.storage ? '\n📦 ' + product.storage : ''}${product.color ? '\n🎨 ' + product.color : ''}\n💰 *${product.price.toLocaleString('fr-FR')} FCFA*\n\n📍 Keur Massar au rond-point\n☎️ +221 777042635\n\nContactez-nous pour commander !`)
+      const msg = encodeURIComponent(`Nouveau produit disponible chez SSI !\n\n*${product.name}*${product.storage ? '\nCapacité : ' + product.storage : ''}${product.color ? '\nCouleur : ' + product.color : ''}\nPrix : *${product.price.toLocaleString('fr-FR')} FCFA*\n\nKeur Massar au rond-point\nTel : +221 777042635\n\nContactez-nous pour commander !`)
       window.open(`https://wa.me/?text=${msg}`, '_blank')
     }
   }
@@ -96,6 +96,7 @@ function GestionProduits({ categories }) {
           <select value={filter} onChange={e => setFilter(e.target.value)} style={{ background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 8, padding: '8px 12px', fontSize: '0.875rem', color: 'var(--text)', cursor: 'pointer' }}>
             <option value="all">Tous ({produits.length})</option>
             <option value="publie">✅ Publiés ({produits.filter(p => p.status === 'publie').length})</option>
+            <option value="rupture">🔴 Rupture ({produits.filter(p => p.status === 'rupture').length})</option>
             <option value="brouillon">📝 Brouillons ({produits.filter(p => p.status === 'brouillon').length})</option>
           </select>
           <button onClick={() => openForm()} style={{ background: 'var(--primary)', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: '0.875rem', fontWeight: 700, cursor: 'pointer' }}>+ Nouveau produit</button>
@@ -108,8 +109,8 @@ function GestionProduits({ categories }) {
             <div style={{ position: 'relative', height: 170, background: 'var(--bg3)' }}>
               {p.image_url ? <img src={p.image_url} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.5rem', opacity: 0.2 }}>💻</div>}
-              <span style={{ position: 'absolute', top: 8, right: 8, background: p.status === 'publie' ? '#16a34a' : '#d97706', color: '#fff', fontSize: '0.65rem', fontWeight: 700, padding: '3px 8px', borderRadius: 4 }}>
-                {p.status === 'publie' ? '✅ PUBLIÉ' : '📝 BROUILLON'}
+              <span style={{ position: 'absolute', top: 8, right: 8, background: p.status === 'publie' ? '#16a34a' : p.status === 'rupture' ? '#dc2626' : '#d97706', color: '#fff', fontSize: '0.65rem', fontWeight: 700, padding: '3px 8px', borderRadius: 4 }}>
+                {p.status === 'publie' ? '✅ PUBLIÉ' : p.status === 'rupture' ? '🔴 RUPTURE' : '📝 BROUILLON'}
               </span>
             </div>
             <div style={{ padding: 12 }}>
@@ -117,10 +118,12 @@ function GestionProduits({ categories }) {
               <div style={{ fontSize: '0.75rem', color: 'var(--text3)', marginBottom: 8 }}>{p.categories?.icon} {p.categories?.label} · {p.brand}</div>
               <div style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--primary)', marginBottom: 12 }}>{p.price.toLocaleString('fr-FR')} FCFA</div>
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                <button onClick={() => toggleStatus(p)}
-                  style={{ flex: 1, background: p.status === 'publie' ? '#fef2f2' : '#f0fdf4', color: p.status === 'publie' ? '#dc2626' : '#16a34a', border: `1px solid ${p.status === 'publie' ? '#fecaca' : '#bbf7d0'}`, borderRadius: 6, padding: '6px 8px', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer' }}>
-                  {p.status === 'publie' ? '⬇ Dépublier' : '🚀 Publier'}
-                </button>
+                <select value={p.status} onChange={async e => { await supabase.from('produits').update({ status: e.target.value }).eq('id', p.id); load(); if (e.target.value === 'publie') { const msg = encodeURIComponent(`Nouveau produit disponible chez SSI !\n\n*${p.name}*${p.storage ? '\nCapacité : ' + p.storage : ''}\nPrix : *${p.price.toLocaleString('fr-FR')} FCFA*\n\nKeur Massar au rond-point\nTel : +221 777042635`); window.open(`https://wa.me/?text=${msg}`, '_blank') } }}
+                  style={{ flex: 1, background: p.status === 'publie' ? '#f0fdf4' : p.status === 'rupture' ? '#fef2f2' : 'var(--orange-light)', border: `1px solid ${p.status === 'publie' ? '#bbf7d0' : p.status === 'rupture' ? '#fecaca' : '#fde68a'}`, color: p.status === 'publie' ? '#16a34a' : p.status === 'rupture' ? '#dc2626' : '#d97706', borderRadius: 6, padding: '6px 8px', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer' }}>
+                  <option value="brouillon">📝 Brouillon</option>
+                  <option value="publie">✅ Publié</option>
+                  <option value="rupture">🔴 Rupture</option>
+                </select>
                 <button onClick={() => openForm(p)} style={{ background: 'var(--primary-light)', color: 'var(--primary)', border: 'none', borderRadius: 6, padding: '6px 10px', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer' }}>✏️</button>
                 <button onClick={() => del(p.id)} style={{ background: 'var(--red-light)', color: 'var(--red)', border: 'none', borderRadius: 6, padding: '6px 10px', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer' }}>🗑</button>
               </div>
@@ -185,6 +188,7 @@ function GestionProduits({ categories }) {
                   style={{ width: '100%', background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 8, padding: '10px 12px', fontSize: '0.875rem', color: 'var(--text)', cursor: 'pointer' }}>
                   <option value="brouillon">📝 Brouillon</option>
                   <option value="publie">✅ Publié (visible clients)</option>
+                  <option value="rupture">🔴 Rupture de stock (visible mais indisponible)</option>
                 </select>
               </div>
             </div>

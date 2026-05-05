@@ -357,7 +357,6 @@ export default function Admin() {
   const menuItems = [
     { id: 'produits', label: 'Produits', icon: '🗂' },
     { id: 'categories', label: 'Rubriques', icon: '📁' },
-    { id: 'boutique_preview', label: 'Voir boutique', icon: '👁' },
     { id: 'caisse', label: 'Caisse POS', icon: '🖥' },
     { id: 'action', label: 'Actions', icon: '⚡' },
     { id: 'events', label: 'Évents', icon: '🛒' },
@@ -369,7 +368,6 @@ export default function Admin() {
   ]
 
   const renderContent = () => {
-    if (activeMenu === 'boutique_preview') { window.open('/', '_blank'); setActiveMenu('produits'); return null }
     switch (activeMenu) {
       case 'produits': return <GestionProduits categories={categories} />
       case 'categories': return <GestionCategories categories={categories} setCategories={setCategories} refreshCategories={refreshCategories} />
@@ -408,6 +406,14 @@ export default function Admin() {
             {item.label}
           </button>
         ))}
+        {/* Voir boutique - lien direct */}
+        <a href="/" target="_blank" rel="noreferrer"
+          style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 8, background: 'none', color: 'var(--text2)', fontSize: '0.875rem', fontWeight: 500, textDecoration: 'none', transition: 'background 0.15s' }}
+          onMouseEnter={e => e.currentTarget.style.background = 'var(--bg3)'}
+          onMouseLeave={e => e.currentTarget.style.background = 'none'}>
+          <span style={{ fontSize: '1rem', width: 20, textAlign: 'center' }}>👁</span>
+          Voir boutique
+        </a>
       </nav>
       <div style={{ padding: 8, borderTop: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 2 }}>
         <button onClick={() => setDarkMode(d => !d)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 8, background: 'none', border: 'none', color: 'var(--text2)', fontSize: '0.875rem', fontWeight: 500, cursor: 'pointer', width: '100%', textAlign: 'left' }}>

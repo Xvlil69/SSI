@@ -18,7 +18,11 @@ function GestionProduits({ categories }) {
   const [editProduct, setEditProduct] = useState(null)
   const [filter, setFilter] = useState('all')
   const [search, setSearch] = useState('')
-  const [form, setForm] = useState({ name: '', category_id: '', brand: '', storage: '', color: '', price: '', description: '', image_url: '', whatsapp_number: '221777042635', status: 'brouillon' })
+  const [form, setForm] = useState({
+    name: '', category_id: '', brand: '', storage: '', color: '',
+    price: '', description: '', image_url: '', whatsapp_number: '221777042635',
+    status: 'brouillon', stock: '0', stock_alerte: '3'
+  })
   const [imageFile, setImageFile] = useState(null)
   const [imagePreview, setImagePreview] = useState('')
   const [saving, setSaving] = useState(false)
@@ -32,11 +36,23 @@ function GestionProduits({ categories }) {
 
   const openForm = (product = null) => {
     if (product) {
-      setForm({ name: product.name, category_id: product.category_id || '', brand: product.brand || '', storage: product.storage || '', color: product.color || '', price: product.price, description: product.description || '', image_url: product.image_url || '', whatsapp_number: product.whatsapp_number || '221777042635', status: product.status })
+      setForm({
+        name: product.name, category_id: product.category_id || '',
+        brand: product.brand || '', storage: product.storage || '',
+        color: product.color || '', price: product.price,
+        description: product.description || '', image_url: product.image_url || '',
+        whatsapp_number: product.whatsapp_number || '221777042635',
+        status: product.status, stock: product.stock || '0',
+        stock_alerte: product.stock_alerte || '3'
+      })
       setImagePreview(product.image_url || '')
       setEditProduct(product)
     } else {
-      setForm({ name: '', category_id: categories[0]?.id || '', brand: '', storage: '', color: '', price: '', description: '', image_url: '', whatsapp_number: '221777042635', status: 'brouillon' })
+      setForm({
+        name: '', category_id: categories[0]?.id || '', brand: '', storage: '',
+        color: '', price: '', description: '', image_url: '',
+        whatsapp_number: '221777042635', status: 'brouillon', stock: '0', stock_alerte: '3'
+      })
       setImagePreview('')
       setEditProduct(null)
     }
@@ -58,7 +74,14 @@ function GestionProduits({ categories }) {
     if (imageFile) {
       try { imageUrl = await uploadImage(imageFile) } catch (e) { alert('Erreur upload image: ' + e.message); setSaving(false); return }
     }
-    const payload = { ...form, price: parseFloat(form.price), image_url: imageUrl, updated_at: new Date().toISOString() }
+    const payload = {
+      ...form,
+      price: parseFloat(form.price),
+      stock: parseInt(form.stock) || 0,
+      stock_alerte: parseInt(form.stock_alerte) || 3,
+      image_url: imageUrl,
+      updated_at: new Date().toISOString()
+    }
     if (editProduct) {
       await supabase.from('produits').update(payload).eq('id', editProduct.id)
     } else {
@@ -69,16 +92,6 @@ function GestionProduits({ categories }) {
     load()
   }
 
-  const toggleStatus = async (product) => {
-    const newStatus = product.status === 'publie' ? 'brouillon' : 'publie'
-    await supabase.from('produits').update({ status: newStatus }).eq('id', product.id)
-    load()
-    if (newStatus === 'publie') {
-      const msg = encodeURIComponent(`Nouveau produit disponible chez SSI !\n\n*${product.name}*${product.storage ? '\nCapacité : ' + product.storage : ''}${product.color ? '\nCouleur : ' + product.color : ''}\nPrix : *${product.price.toLocaleString('fr-FR')} FCFA*\n\nKeur Massar au rond-point\nTel : +221 777042635\n\nContactez-nous pour commander !`)
-      window.open(`https://wa.me/?text=${msg}`, '_blank')
-    }
-  }
-
   const del = async (id) => { if (confirm('Supprimer ce produit ?')) { await supabase.from('produits').delete().eq('id', id); load() } }
 
   const filtered = produits.filter(p => {
@@ -86,6 +99,12 @@ function GestionProduits({ categories }) {
     const matchSearch = p.name.toLowerCase().includes(search.toLowerCase())
     return matchFilter && matchSearch
   })
+
+  const getStockColor = (stock) => {
+    if (!stock || stock === 0) return '#dc2626'
+    if (stock <= 3) return '#d97706'
+    return '#16a34a'
+  }
 
   return (
     <div style={{ padding: 24 }}>
@@ -112,14 +131,23 @@ function GestionProduits({ categories }) {
               <span style={{ position: 'absolute', top: 8, right: 8, background: p.status === 'publie' ? '#16a34a' : p.status === 'rupture' ? '#dc2626' : '#d97706', color: '#fff', fontSize: '0.65rem', fontWeight: 700, padding: '3px 8px', borderRadius: 4 }}>
                 {p.status === 'publie' ? '✅ PUBLIÉ' : p.status === 'rupture' ? '🔴 RUPTURE' : '📝 BROUILLON'}
               </span>
+              {/* Stock badge */}
+              <span style={{ position: 'absolute', bottom: 8, left: 8, background: 'rgba(0,0,0,0.65)', color: getStockColor(p.stock), fontSize: '0.65rem', fontWeight: 700, padding: '3px 8px', borderRadius: 4, backdropFilter: 'blur(4px)' }}>
+                📦 {p.stock || 0} en stock
+              </span>
             </div>
             <div style={{ padding: 12 }}>
               <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text)', marginBottom: 4 }}>{p.name}</div>
               <div style={{ fontSize: '0.75rem', color: 'var(--text3)', marginBottom: 8 }}>{p.categories?.icon} {p.categories?.label} · {p.brand}</div>
               <div style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--primary)', marginBottom: 12 }}>{p.price.toLocaleString('fr-FR')} FCFA</div>
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                <select value={p.status} onChange={async e => { await supabase.from('produits').update({ status: e.target.value }).eq('id', p.id); load(); if (e.target.value === 'publie') { const msg = encodeURIComponent(`Nouveau produit disponible chez SSI !\n\n*${p.name}*${p.storage ? '\nCapacité : ' + p.storage : ''}\nPrix : *${p.price.toLocaleString('fr-FR')} FCFA*\n\nKeur Massar au rond-point\nTel : +221 777042635`); window.open(`https://wa.me/?text=${msg}`, '_blank') } }}
-                  style={{ flex: 1, background: p.status === 'publie' ? '#f0fdf4' : p.status === 'rupture' ? '#fef2f2' : 'var(--orange-light)', border: `1px solid ${p.status === 'publie' ? '#bbf7d0' : p.status === 'rupture' ? '#fecaca' : '#fde68a'}`, color: p.status === 'publie' ? '#16a34a' : p.status === 'rupture' ? '#dc2626' : '#d97706', borderRadius: 6, padding: '6px 8px', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer' }}>
+                <select value={p.status} onChange={async e => {
+                  await supabase.from('produits').update({ status: e.target.value }).eq('id', p.id); load()
+                  if (e.target.value === 'publie') {
+                    const msg = encodeURIComponent(`Nouveau produit disponible chez SSI !\n\n*${p.name}*${p.storage ? '\nCapacité : ' + p.storage : ''}\nPrix : *${p.price.toLocaleString('fr-FR')} FCFA*\n\nKeur Massar au rond-point\nTel : +221 777042635`)
+                    window.open(`https://wa.me/?text=${msg}`, '_blank')
+                  }
+                }} style={{ flex: 1, background: p.status === 'publie' ? '#f0fdf4' : p.status === 'rupture' ? '#fef2f2' : '#fffbeb', border: `1px solid ${p.status === 'publie' ? '#bbf7d0' : p.status === 'rupture' ? '#fecaca' : '#fde68a'}`, color: p.status === 'publie' ? '#16a34a' : p.status === 'rupture' ? '#dc2626' : '#d97706', borderRadius: 6, padding: '6px 8px', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer' }}>
                   <option value="brouillon">📝 Brouillon</option>
                   <option value="publie">✅ Publié</option>
                   <option value="rupture">🔴 Rupture</option>
@@ -137,7 +165,7 @@ function GestionProduits({ categories }) {
       {/* Form Modal */}
       {showForm && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }} onClick={() => setShowForm(false)}>
-          <div style={{ background: 'var(--surface)', borderRadius: 16, padding: 24, width: '100%', maxWidth: 600, maxHeight: '90vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+          <div style={{ background: 'var(--surface)', borderRadius: 16, padding: 24, width: '100%', maxWidth: 620, maxHeight: '90vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
             <h3 style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--text)', marginBottom: 20 }}>{editProduct ? '✏️ Modifier le produit' : '➕ Nouveau produit'}</h3>
 
             {/* Image upload */}
@@ -167,10 +195,12 @@ function GestionProduits({ categories }) {
                 { label: 'Couleur', key: 'color', placeholder: 'Ex: Noir / Argent' },
                 { label: 'Prix (FCFA) *', key: 'price', placeholder: '0', type: 'number' },
                 { label: 'N° WhatsApp', key: 'whatsapp_number', placeholder: '221777042635' },
+                { label: '📦 Stock initial', key: 'stock', placeholder: '0', type: 'number' },
+                { label: '⚠️ Alerte stock faible', key: 'stock_alerte', placeholder: '3', type: 'number' },
               ].map(f => (
                 <div key={f.key} style={f.full ? { gridColumn: '1/-1' } : {}}>
                   <label style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text2)', display: 'block', marginBottom: 5 }}>{f.label}</label>
-                  <input value={form[f.key]} onChange={e => setForm(prev => ({ ...prev, [f.key]: e.target.value }))}
+                  <input value={form[f.key] || ''} onChange={e => setForm(prev => ({ ...prev, [f.key]: e.target.value }))}
                     type={f.type || 'text'} placeholder={f.placeholder}
                     style={{ width: '100%', background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 8, padding: '10px 12px', fontSize: '0.875rem', color: 'var(--text)' }} />
                 </div>
@@ -188,7 +218,7 @@ function GestionProduits({ categories }) {
                   style={{ width: '100%', background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 8, padding: '10px 12px', fontSize: '0.875rem', color: 'var(--text)', cursor: 'pointer' }}>
                   <option value="brouillon">📝 Brouillon</option>
                   <option value="publie">✅ Publié (visible clients)</option>
-                  <option value="rupture">🔴 Rupture de stock (visible mais indisponible)</option>
+                  <option value="rupture">🔴 Rupture de stock</option>
                 </select>
               </div>
             </div>
@@ -223,7 +253,7 @@ function GestionCategories({ categories, setCategories, refreshCategories }) {
   }
 
   const del = async (id) => {
-    if (!confirm('Supprimer cette rubrique ? Les produits liés perdront leur catégorie.')) return
+    if (!confirm('Supprimer cette rubrique ?')) return
     await supabase.from('categories').delete().eq('id', id)
     refreshCategories()
   }
@@ -234,7 +264,6 @@ function GestionCategories({ categories, setCategories, refreshCategories }) {
         <h1 style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--text)' }}>📁 Rubriques du catalogue</h1>
         <button onClick={() => setShowForm(true)} style={{ background: 'var(--primary)', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: '0.875rem', fontWeight: 700, cursor: 'pointer' }}>+ Nouvelle rubrique</button>
       </div>
-
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))', gap: 12 }}>
         {categories.map(cat => (
           <div key={cat.id} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -246,13 +275,12 @@ function GestionCategories({ categories, setCategories, refreshCategories }) {
           </div>
         ))}
       </div>
-
       {showForm && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }} onClick={() => setShowForm(false)}>
           <div style={{ background: 'var(--surface)', borderRadius: 16, padding: 24, width: '100%', maxWidth: 400 }} onClick={e => e.stopPropagation()}>
             <h3 style={{ fontWeight: 800, marginBottom: 20, color: 'var(--text)' }}>📁 Nouvelle rubrique</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 20 }}>
-              {[{ label: 'Nom de la rubrique *', key: 'label', placeholder: 'Ex: Tablettes' }, { label: 'Icône (emoji)', key: 'icon', placeholder: '📦' }, { label: 'Ordre d\'affichage', key: 'ordre', placeholder: '0', type: 'number' }].map(f => (
+              {[{ label: 'Nom *', key: 'label', placeholder: 'Ex: Tablettes' }, { label: 'Icône (emoji)', key: 'icon', placeholder: '📦' }, { label: "Ordre d'affichage", key: 'ordre', placeholder: '0', type: 'number' }].map(f => (
                 <div key={f.key}>
                   <label style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text2)', display: 'block', marginBottom: 5 }}>{f.label}</label>
                   <input value={form[f.key]} onChange={e => setForm(prev => ({ ...prev, [f.key]: e.target.value }))} type={f.type || 'text'} placeholder={f.placeholder}
@@ -295,9 +323,7 @@ export default function Admin() {
     })
   }, [])
 
-  useEffect(() => {
-    document.body.classList.toggle('dark', darkMode)
-  }, [darkMode])
+  useEffect(() => { document.body.classList.toggle('dark', darkMode) }, [darkMode])
 
   const refreshCategories = async () => {
     const { data } = await supabase.from('categories').select('*').order('ordre')
@@ -307,7 +333,6 @@ export default function Admin() {
   useEffect(() => {
     if (!loading) {
       refreshCategories()
-      // Load local state from localStorage
       try {
         setClients(JSON.parse(localStorage.getItem('ssi_clients') || '[]'))
         setFactures(JSON.parse(localStorage.getItem('ssi_factures') || '[]'))
@@ -319,7 +344,6 @@ export default function Admin() {
     }
   }, [loading])
 
-  // Persist to localStorage
   useEffect(() => { try { localStorage.setItem('ssi_clients', JSON.stringify(clients)) } catch {} }, [clients])
   useEffect(() => { try { localStorage.setItem('ssi_factures', JSON.stringify(factures)) } catch {} }, [factures])
   useEffect(() => { try { localStorage.setItem('ssi_devis', JSON.stringify(devis)) } catch {} }, [devis])
@@ -334,6 +358,7 @@ export default function Admin() {
     { id: 'produits', label: 'Produits', icon: '🗂' },
     { id: 'categories', label: 'Rubriques', icon: '📁' },
     { id: 'boutique_preview', label: 'Voir boutique', icon: '👁' },
+    { id: 'caisse', label: 'Caisse POS', icon: '🖥' },
     { id: 'action', label: 'Actions', icon: '⚡' },
     { id: 'events', label: 'Évents', icon: '🛒' },
     { id: 'factures', label: 'Factures', icon: '📄' },
@@ -375,7 +400,6 @@ export default function Admin() {
           <div style={{ fontSize: '0.62rem', color: 'var(--text3)', textOverflow: 'ellipsis', overflow: 'hidden', maxWidth: 130 }}>{user?.email}</div>
         </div>
       </div>
-
       <nav style={{ flex: 1, padding: 8, display: 'flex', flexDirection: 'column', gap: 2 }}>
         {menuItems.map(item => (
           <button key={item.id} onClick={() => { setActiveMenu(item.id); setSidebarOpen(false) }}
@@ -385,7 +409,6 @@ export default function Admin() {
           </button>
         ))}
       </nav>
-
       <div style={{ padding: 8, borderTop: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 2 }}>
         <button onClick={() => setDarkMode(d => !d)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 8, background: 'none', border: 'none', color: 'var(--text2)', fontSize: '0.875rem', fontWeight: 500, cursor: 'pointer', width: '100%', textAlign: 'left' }}>
           <span>{darkMode ? '☀️' : '🌙'}</span> {darkMode ? 'Mode clair' : 'Mode sombre'}

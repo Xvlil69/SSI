@@ -46,19 +46,21 @@ export default function CaissePOS({ addVente }) {
 
   const total = cart.reduce((sum, i) => sum + i.price * i.qty, 0);
 
-  const processVente = () => {
+  const processVente = async () => {
     if (cart.length === 0) return;
+    const numero = 'V-' + Date.now().toString().slice(-6);
     const vente = {
-      id: Date.now(),
+      numero,
       articles: cart,
       total,
-      clientNom: clientNom || 'Client anonyme',
+      client_nom: clientNom || 'Client anonyme',
       paiement,
-      date: new Date().toISOString(),
-      numero: 'V-' + Date.now().toString().slice(-6),
     };
-    addVente(vente);
-    setReceipt(vente);
+    // Save to Supabase
+    await supabase.from('ventes').insert(vente);
+    // Also update local state
+    addVente({ ...vente, id: Date.now(), date: new Date().toISOString(), clientNom: vente.client_nom });
+    setReceipt({ ...vente, clientNom: vente.client_nom, date: new Date().toISOString() });
     setCart([]);
     setClientNom('');
   };
@@ -105,43 +107,7 @@ export default function CaissePOS({ addVente }) {
           </div>
         ) : filtered.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text3)' }}>
-            <p>Aucun produit trouvé</p> b b
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            
+            <p>Aucun produit trouvé</p>
           </div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(160px,1fr))', gap: 12 }}>

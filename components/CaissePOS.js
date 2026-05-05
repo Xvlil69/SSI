@@ -1,17 +1,33 @@
 import { useState, useEffect } from 'react';
-import { products } from '../data/products';
+import { supabase } from '../lib/supabase';
 import s from '../styles/shared.module.css';
 
 export default function CaissePOS({ addVente }) {
+  const [products, setProducts] = useState([]);
   const [cart, setCart] = useState([]);
   const [search, setSearch] = useState('');
   const [paiement, setPaiement] = useState('especes');
   const [clientNom, setClientNom] = useState('');
   const [receipt, setReceipt] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const load = async () => {
+      const { data } = await supabase
+        .from('produits')
+        .select('*, categories(label,icon)')
+        .eq('status', 'publie')
+        .order('name');
+      setProducts(data || []);
+      setLoading(false);
+    };
+    load();
+  }, []);
 
   const filtered = products.filter(p =>
     p.name.toLowerCase().includes(search.toLowerCase()) ||
-    p.brand.toLowerCase().includes(search.toLowerCase())
+    p.brand?.toLowerCase().includes(search.toLowerCase()) ||
+    p.categories?.label?.toLowerCase().includes(search.toLowerCase())
   );
 
   const addToCart = (product) => {
@@ -79,18 +95,74 @@ export default function CaissePOS({ addVente }) {
       {/* Products panel */}
       <div style={{ padding: 20, overflowY: 'auto', borderRight: '1px solid var(--border)' }}>
         <div style={{ marginBottom: 14 }}>
-          <input className={s.formInput} placeholder="🔍 Rechercher un produit..." value={search} onChange={e => setSearch(e.target.value)} style={{ maxWidth: 340 }} />
+          <input className={s.formInput} placeholder="🔍 Rechercher un produit..." value={search} onChange={e => setSearch(e.target.value)} style={{ maxWidth: 400 }} />
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(160px,1fr))', gap: 12 }}>
-          {filtered.map(p => (
-            <button key={p.id} onClick={() => addToCart(p)} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10, padding: 12, textAlign: 'left', cursor: 'pointer', transition: 'border-color 0.15s', display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <img src={p.image} alt={p.name} style={{ width: '100%', height: 90, objectFit: 'cover', borderRadius: 6 }} />
-              <div style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text)', lineHeight: 1.3 }}>{p.name}</div>
-              {p.storage && <div style={{ fontSize: '0.7rem', color: 'var(--text3)' }}>{p.storage}</div>}
-              <div style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--primary)' }}>{p.price.toLocaleString('fr-FR')} F</div>
-            </button>
-          ))}
-        </div>
+
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text3)' }}>
+            <div style={{ fontSize: '2rem', marginBottom: 8 }}>⏳</div>
+            <p>Chargement des produits...</p>
+          </div>
+        ) : filtered.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text3)' }}>
+            <p>Aucun produit trouvé</p> b b
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(160px,1fr))', gap: 12 }}>
+            {filtered.map(p => (
+              <button key={p.id} onClick={() => addToCart(p)}
+                style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 10, padding: 12, textAlign: 'left', cursor: 'pointer', transition: 'border-color 0.15s,transform 0.15s', display: 'flex', flexDirection: 'column', gap: 6 }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--primary)'; e.currentTarget.style.transform = 'translateY(-2px)' }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.transform = '' }}>
+                {p.image_url ? (
+                  <img src={p.image_url} alt={p.name} style={{ width: '100%', height: 90, objectFit: 'cover', borderRadius: 6 }} />
+                ) : (
+                  <div style={{ width: '100%', height: 90, background: 'var(--bg3)', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.8rem', opacity: 0.3 }}>💻</div>
+                )}
+                <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text)', lineHeight: 1.3 }}>{p.name}</div>
+                {p.storage && <div style={{ fontSize: '0.68rem', color: 'var(--text3)' }}>{p.storage}</div>}
+                {p.categories && <div style={{ fontSize: '0.65rem', color: 'var(--text3)' }}>{p.categories.icon} {p.categories.label}</div>}
+                <div style={{ fontSize: '0.875rem', fontWeight: 800, color: 'var(--primary)' }}>{p.price.toLocaleString('fr-FR')} F</div>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Cart panel */}
@@ -108,15 +180,19 @@ export default function CaissePOS({ addVente }) {
           ) : (
             cart.map(item => (
               <div key={item.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 0', borderBottom: '1px solid var(--border)' }}>
-                <img src={item.image} alt={item.name} style={{ width: 44, height: 44, objectFit: 'cover', borderRadius: 6, flexShrink: 0 }} />
+                {item.image_url ? (
+                  <img src={item.image_url} alt={item.name} style={{ width: 44, height: 44, objectFit: 'cover', borderRadius: 6, flexShrink: 0 }} />
+                ) : (
+                  <div style={{ width: 44, height: 44, background: 'var(--bg3)', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', flexShrink: 0 }}>💻</div>
+                )}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.name}</div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 700 }}>{(item.price * item.qty).toLocaleString('fr-FR')} F</div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-                  <button onClick={() => updateQty(item.id, -1)} style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--bg3)', border: '1px solid var(--border)', color: 'var(--text)', fontSize: '0.9rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>-</button>
+                  <button onClick={() => updateQty(item.id, -1)} style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--bg3)', border: '1px solid var(--border)', color: 'var(--text)', fontSize: '0.9rem', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>-</button>
                   <span style={{ fontSize: '0.85rem', fontWeight: 700, minWidth: 16, textAlign: 'center', color: 'var(--text)' }}>{item.qty}</span>
-                  <button onClick={() => updateQty(item.id, 1)} style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--primary)', border: 'none', color: '#fff', fontSize: '0.9rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
+                  <button onClick={() => updateQty(item.id, 1)} style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--primary)', border: 'none', color: '#fff', fontSize: '0.9rem', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>+</button>
                 </div>
                 <button onClick={() => removeItem(item.id)} style={{ color: 'var(--red)', background: 'none', border: 'none', fontSize: '1rem', cursor: 'pointer', flexShrink: 0 }}>✕</button>
               </div>
@@ -137,7 +213,7 @@ export default function CaissePOS({ addVente }) {
             <span style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--primary)' }}>{total.toLocaleString('fr-FR')} FCFA</span>
           </div>
           <button onClick={processVente} disabled={cart.length === 0}
-            style={{ width: '100%', background: cart.length === 0 ? 'var(--border)' : 'var(--green)', color: '#fff', border: 'none', borderRadius: 10, padding: 14, fontSize: '1rem', fontWeight: 700, cursor: cart.length === 0 ? 'not-allowed' : 'pointer' }}>
+            style={{ width: '100%', background: cart.length === 0 ? 'var(--border)' : 'var(--green)', color: cart.length === 0 ? 'var(--text3)' : '#fff', border: 'none', borderRadius: 10, padding: 14, fontSize: '1rem', fontWeight: 700, cursor: cart.length === 0 ? 'not-allowed' : 'pointer' }}>
             ✅ Valider la vente
           </button>
           {cart.length > 0 && <button onClick={() => setCart([])} style={{ background: 'none', border: 'none', color: 'var(--text3)', fontSize: '0.8rem', cursor: 'pointer' }}>🗑 Vider le panier</button>}

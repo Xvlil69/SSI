@@ -10,8 +10,13 @@ import Rapports from '../components/Rapports'
 import Events from '../components/Events'
 import Actions from '../components/Actions'
 import CaissePOS from '../components/CaissePOS'
+import {
+  LayoutGrid, FolderOpen, Eye, Monitor, Zap, ShoppingCart,
+  FileText, Users, Wallet, BarChart2, ClipboardList, Moon, Sun,
+  LogOut, Menu, Package, Search, Pencil, Trash2, Plus, Upload, X, Save
+} from 'lucide-react'
 
-// ---------- GESTION PRODUITS (Admin) ----------
+// ---------- GESTION PRODUITS ----------
 function GestionProduits({ categories }) {
   const [produits, setProduits] = useState([])
   const [showForm, setShowForm] = useState(false)
@@ -92,7 +97,12 @@ function GestionProduits({ categories }) {
     load()
   }
 
-  const del = async (id) => { if (confirm('Supprimer ce produit ?')) { await supabase.from('produits').delete().eq('id', id); load() } }
+  const del = async (id) => {
+    if (confirm('Supprimer ce produit ?')) {
+      await supabase.from('produits').delete().eq('id', id)
+      load()
+    }
+  }
 
   const filtered = produits.filter(p => {
     const matchFilter = filter === 'all' || p.status === filter
@@ -109,16 +119,26 @@ function GestionProduits({ categories }) {
   return (
     <div style={{ padding: 24 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 10 }}>
-        <h1 style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--text)' }}>🗂 Gestion des produits</h1>
+        <h1 style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <LayoutGrid size={20} /> Gestion des produits
+        </h1>
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="🔍 Rechercher..." style={{ background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 8, padding: '8px 12px', fontSize: '0.875rem', color: 'var(--text)', width: 200 }} />
-          <select value={filter} onChange={e => setFilter(e.target.value)} style={{ background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 8, padding: '8px 12px', fontSize: '0.875rem', color: 'var(--text)', cursor: 'pointer' }}>
+          <div style={{ position: 'relative' }}>
+            <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text3)', pointerEvents: 'none' }} />
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher..."
+              style={{ background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 8, padding: '8px 12px 8px 32px', fontSize: '0.875rem', color: 'var(--text)', width: 200 }} />
+          </div>
+          <select value={filter} onChange={e => setFilter(e.target.value)}
+            style={{ background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 8, padding: '8px 12px', fontSize: '0.875rem', color: 'var(--text)', cursor: 'pointer' }}>
             <option value="all">Tous ({produits.length})</option>
             <option value="publie">✅ Publiés ({produits.filter(p => p.status === 'publie').length})</option>
             <option value="rupture">🔴 Rupture ({produits.filter(p => p.status === 'rupture').length})</option>
             <option value="brouillon">📝 Brouillons ({produits.filter(p => p.status === 'brouillon').length})</option>
           </select>
-          <button onClick={() => openForm()} style={{ background: 'var(--primary)', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: '0.875rem', fontWeight: 700, cursor: 'pointer' }}>+ Nouveau produit</button>
+          <button onClick={() => openForm()}
+            style={{ background: 'var(--primary)', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: '0.875rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <Plus size={16} /> Nouveau produit
+          </button>
         </div>
       </div>
 
@@ -126,14 +146,14 @@ function GestionProduits({ categories }) {
         {filtered.map(p => (
           <div key={p.id} style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden' }}>
             <div style={{ position: 'relative', height: 170, background: 'var(--bg3)' }}>
-              {p.image_url ? <img src={p.image_url} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.5rem', opacity: 0.2 }}>💻</div>}
+              {p.image_url
+                ? <img src={p.image_url} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Monitor size={40} style={{ opacity: 0.15 }} /></div>}
               <span style={{ position: 'absolute', top: 8, right: 8, background: p.status === 'publie' ? '#16a34a' : p.status === 'rupture' ? '#dc2626' : '#d97706', color: '#fff', fontSize: '0.65rem', fontWeight: 700, padding: '3px 8px', borderRadius: 4 }}>
                 {p.status === 'publie' ? '✅ PUBLIÉ' : p.status === 'rupture' ? '🔴 RUPTURE' : '📝 BROUILLON'}
               </span>
-              {/* Stock badge */}
-              <span style={{ position: 'absolute', bottom: 8, left: 8, background: 'rgba(0,0,0,0.65)', color: getStockColor(p.stock), fontSize: '0.65rem', fontWeight: 700, padding: '3px 8px', borderRadius: 4, backdropFilter: 'blur(4px)' }}>
-                📦 {p.stock || 0} en stock
+              <span style={{ position: 'absolute', bottom: 8, left: 8, background: 'rgba(0,0,0,0.65)', color: getStockColor(p.stock), fontSize: '0.65rem', fontWeight: 700, padding: '3px 8px', borderRadius: 4, backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                <Package size={11} /> {p.stock || 0} en stock
               </span>
             </div>
             <div style={{ padding: 12 }}>
@@ -152,37 +172,47 @@ function GestionProduits({ categories }) {
                   <option value="publie">✅ Publié</option>
                   <option value="rupture">🔴 Rupture</option>
                 </select>
-                <button onClick={() => openForm(p)} style={{ background: 'var(--primary-light)', color: 'var(--primary)', border: 'none', borderRadius: 6, padding: '6px 10px', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer' }}>✏️</button>
-                <button onClick={() => del(p.id)} style={{ background: 'var(--red-light)', color: 'var(--red)', border: 'none', borderRadius: 6, padding: '6px 10px', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer' }}>🗑</button>
+                <button onClick={() => openForm(p)}
+                  style={{ background: 'var(--primary-light)', color: 'var(--primary)', border: 'none', borderRadius: 6, padding: '6px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                  <Pencil size={13} />
+                </button>
+                <button onClick={() => del(p.id)}
+                  style={{ background: 'var(--red-light)', color: 'var(--red)', border: 'none', borderRadius: 6, padding: '6px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                  <Trash2 size={13} />
+                </button>
               </div>
             </div>
           </div>
         ))}
       </div>
 
-      {filtered.length === 0 && <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text3)' }}>Aucun produit trouvé</div>}
+      {filtered.length === 0 && (
+        <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text3)' }}>Aucun produit trouvé</div>
+      )}
 
-      {/* Form Modal */}
       {showForm && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }} onClick={() => setShowForm(false)}>
           <div style={{ background: 'var(--surface)', borderRadius: 16, padding: 24, width: '100%', maxWidth: 620, maxHeight: '90vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
-            <h3 style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--text)', marginBottom: 20 }}>{editProduct ? '✏️ Modifier le produit' : '➕ Nouveau produit'}</h3>
+            <h3 style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--text)', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
+              {editProduct ? <><Pencil size={18} /> Modifier le produit</> : <><Plus size={18} /> Nouveau produit</>}
+            </h3>
 
-            {/* Image upload */}
             <div style={{ marginBottom: 16 }}>
-              <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text2)', display: 'block', marginBottom: 8 }}>📸 Image du produit</label>
+              <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text2)', display: 'block', marginBottom: 8 }}>Image du produit</label>
               <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
                 <div style={{ width: 100, height: 100, border: '2px dashed var(--border2)', borderRadius: 10, overflow: 'hidden', flexShrink: 0, background: 'var(--bg3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  {imagePreview ? <img src={imagePreview} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    : <span style={{ fontSize: '2rem', opacity: 0.3 }}>📷</span>}
+                  {imagePreview
+                    ? <img src={imagePreview} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    : <Upload size={24} style={{ opacity: 0.3 }} />}
                 </div>
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  <label style={{ background: 'var(--primary)', color: '#fff', borderRadius: 8, padding: '9px 14px', fontSize: '0.82rem', fontWeight: 600, cursor: 'pointer', textAlign: 'center', display: 'block' }}>
-                    📁 Choisir une image
+                  <label style={{ background: 'var(--primary)', color: '#fff', borderRadius: 8, padding: '9px 14px', fontSize: '0.82rem', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                    <Upload size={14} /> Choisir une image
                     <input type="file" accept="image/*" onChange={handleImage} style={{ display: 'none' }} />
                   </label>
                   <input value={form.image_url} onChange={e => { setForm(f => ({ ...f, image_url: e.target.value })); setImagePreview(e.target.value) }}
-                    placeholder="Ou coller une URL d'image..." style={{ background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 8, padding: '9px 12px', fontSize: '0.8rem', color: 'var(--text)', width: '100%' }} />
+                    placeholder="Ou coller une URL d'image..."
+                    style={{ background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 8, padding: '9px 12px', fontSize: '0.8rem', color: 'var(--text)', width: '100%' }} />
                 </div>
               </div>
             </div>
@@ -195,8 +225,8 @@ function GestionProduits({ categories }) {
                 { label: 'Couleur', key: 'color', placeholder: 'Ex: Noir / Argent' },
                 { label: 'Prix (FCFA) *', key: 'price', placeholder: '0', type: 'number' },
                 { label: 'N° WhatsApp', key: 'whatsapp_number', placeholder: '221777042635' },
-                { label: '📦 Stock initial', key: 'stock', placeholder: '0', type: 'number' },
-                { label: '⚠️ Alerte stock faible', key: 'stock_alerte', placeholder: '3', type: 'number' },
+                { label: 'Stock initial', key: 'stock', placeholder: '0', type: 'number' },
+                { label: 'Alerte stock faible', key: 'stock_alerte', placeholder: '3', type: 'number' },
               ].map(f => (
                 <div key={f.key} style={f.full ? { gridColumn: '1/-1' } : {}}>
                   <label style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text2)', display: 'block', marginBottom: 5 }}>{f.label}</label>
@@ -225,13 +255,19 @@ function GestionProduits({ categories }) {
 
             <div style={{ marginBottom: 20 }}>
               <label style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text2)', display: 'block', marginBottom: 5 }}>Description</label>
-              <textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} rows={3} placeholder="Décrivez le produit..." style={{ width: '100%', background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 8, padding: '10px 12px', fontSize: '0.875rem', color: 'var(--text)', resize: 'vertical' }} />
+              <textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} rows={3}
+                placeholder="Décrivez le produit..."
+                style={{ width: '100%', background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 8, padding: '10px 12px', fontSize: '0.875rem', color: 'var(--text)', resize: 'vertical' }} />
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
-              <button onClick={() => setShowForm(false)} style={{ background: 'transparent', border: '1px solid var(--border2)', color: 'var(--text2)', borderRadius: 8, padding: '10px 18px', fontSize: '0.875rem', cursor: 'pointer' }}>Annuler</button>
-              <button onClick={save} disabled={saving} style={{ background: saving ? '#94a3b8' : 'var(--primary)', color: '#fff', border: 'none', borderRadius: 8, padding: '10px 20px', fontSize: '0.875rem', fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer' }}>
-                {saving ? '⏳ Enregistrement...' : '💾 Enregistrer'}
+              <button onClick={() => setShowForm(false)}
+                style={{ background: 'transparent', border: '1px solid var(--border2)', color: 'var(--text2)', borderRadius: 8, padding: '10px 18px', fontSize: '0.875rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <X size={15} /> Annuler
+              </button>
+              <button onClick={save} disabled={saving}
+                style={{ background: saving ? '#94a3b8' : 'var(--primary)', color: '#fff', border: 'none', borderRadius: 8, padding: '10px 20px', fontSize: '0.875rem', fontWeight: 700, cursor: saving ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <Save size={15} /> {saving ? 'Enregistrement...' : 'Enregistrer'}
               </button>
             </div>
           </div>
@@ -261,8 +297,13 @@ function GestionCategories({ categories, setCategories, refreshCategories }) {
   return (
     <div style={{ padding: 24 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-        <h1 style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--text)' }}>📁 Rubriques du catalogue</h1>
-        <button onClick={() => setShowForm(true)} style={{ background: 'var(--primary)', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: '0.875rem', fontWeight: 700, cursor: 'pointer' }}>+ Nouvelle rubrique</button>
+        <h1 style={{ fontSize: '1.3rem', fontWeight: 800, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <FolderOpen size={20} /> Rubriques du catalogue
+        </h1>
+        <button onClick={() => setShowForm(true)}
+          style={{ background: 'var(--primary)', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: '0.875rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <Plus size={16} /> Nouvelle rubrique
+        </button>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))', gap: 12 }}>
         {categories.map(cat => (
@@ -271,26 +312,42 @@ function GestionCategories({ categories, setCategories, refreshCategories }) {
               <span style={{ fontSize: '1.5rem' }}>{cat.icon}</span>
               <span style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--text)' }}>{cat.label}</span>
             </div>
-            <button onClick={() => del(cat.id)} style={{ background: 'var(--red-light)', color: 'var(--red)', border: 'none', borderRadius: 6, padding: '5px 8px', fontSize: '0.8rem', cursor: 'pointer' }}>🗑</button>
+            <button onClick={() => del(cat.id)}
+              style={{ background: 'var(--red-light)', color: 'var(--red)', border: 'none', borderRadius: 6, padding: '6px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+              <Trash2 size={14} />
+            </button>
           </div>
         ))}
       </div>
       {showForm && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }} onClick={() => setShowForm(false)}>
           <div style={{ background: 'var(--surface)', borderRadius: 16, padding: 24, width: '100%', maxWidth: 400 }} onClick={e => e.stopPropagation()}>
-            <h3 style={{ fontWeight: 800, marginBottom: 20, color: 'var(--text)' }}>📁 Nouvelle rubrique</h3>
+            <h3 style={{ fontWeight: 800, marginBottom: 20, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <FolderOpen size={18} /> Nouvelle rubrique
+            </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 20 }}>
-              {[{ label: 'Nom *', key: 'label', placeholder: 'Ex: Tablettes' }, { label: 'Icône (emoji)', key: 'icon', placeholder: '📦' }, { label: "Ordre d'affichage", key: 'ordre', placeholder: '0', type: 'number' }].map(f => (
+              {[
+                { label: 'Nom *', key: 'label', placeholder: 'Ex: Tablettes' },
+                { label: 'Icône (emoji)', key: 'icon', placeholder: '📦' },
+                { label: "Ordre d'affichage", key: 'ordre', placeholder: '0', type: 'number' }
+              ].map(f => (
                 <div key={f.key}>
                   <label style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text2)', display: 'block', marginBottom: 5 }}>{f.label}</label>
-                  <input value={form[f.key]} onChange={e => setForm(prev => ({ ...prev, [f.key]: e.target.value }))} type={f.type || 'text'} placeholder={f.placeholder}
+                  <input value={form[f.key]} onChange={e => setForm(prev => ({ ...prev, [f.key]: e.target.value }))}
+                    type={f.type || 'text'} placeholder={f.placeholder}
                     style={{ width: '100%', background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 8, padding: '10px 12px', fontSize: '0.875rem', color: 'var(--text)' }} />
                 </div>
               ))}
             </div>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
-              <button onClick={() => setShowForm(false)} style={{ background: 'transparent', border: '1px solid var(--border2)', color: 'var(--text2)', borderRadius: 8, padding: '9px 16px', fontSize: '0.875rem', cursor: 'pointer' }}>Annuler</button>
-              <button onClick={save} style={{ background: 'var(--primary)', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: '0.875rem', fontWeight: 700, cursor: 'pointer' }}>💾 Créer</button>
+              <button onClick={() => setShowForm(false)}
+                style={{ background: 'transparent', border: '1px solid var(--border2)', color: 'var(--text2)', borderRadius: 8, padding: '9px 16px', fontSize: '0.875rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <X size={14} /> Annuler
+              </button>
+              <button onClick={save}
+                style={{ background: 'var(--primary)', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', fontSize: '0.875rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <Save size={14} /> Créer
+              </button>
             </div>
           </div>
         </div>
@@ -355,16 +412,16 @@ export default function Admin() {
   const addVente = (v) => setVentes(prev => [v, ...prev])
 
   const menuItems = [
-    { id: 'produits', label: 'Produits', icon: '🗂' },
-    { id: 'categories', label: 'Rubriques', icon: '📁' },
-    { id: 'caisse', label: 'Caisse POS', icon: '🖥' },
-    { id: 'action', label: 'Actions', icon: '⚡' },
-    { id: 'events', label: 'Évents', icon: '🛒' },
-    { id: 'factures', label: 'Factures', icon: '📄' },
-    { id: 'clients', label: 'Clients', icon: '👥' },
-    { id: 'depenses', label: 'Dépenses', icon: '💰' },
-    { id: 'rapports', label: 'Rapports', icon: '📊' },
-    { id: 'devis', label: 'Devis', icon: '📋' },
+    { id: 'produits', label: 'Produits', Icon: LayoutGrid },
+    { id: 'categories', label: 'Rubriques', Icon: FolderOpen },
+    { id: 'caisse', label: 'Caisse POS', Icon: Monitor },
+    { id: 'action', label: 'Actions', Icon: Zap },
+    { id: 'events', label: 'Évents', Icon: ShoppingCart },
+    { id: 'factures', label: 'Factures', Icon: FileText },
+    { id: 'clients', label: 'Clients', Icon: Users },
+    { id: 'depenses', label: 'Dépenses', Icon: Wallet },
+    { id: 'rapports', label: 'Rapports', Icon: BarChart2 },
+    { id: 'devis', label: 'Devis', Icon: ClipboardList },
   ]
 
   const renderContent = () => {
@@ -385,7 +442,10 @@ export default function Admin() {
 
   if (loading) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' }}>
-      <div style={{ textAlign: 'center', color: 'var(--text3)' }}><div style={{ fontSize: '2rem', marginBottom: 8 }}>🔐</div><p>Vérification...</p></div>
+      <div style={{ textAlign: 'center', color: 'var(--text3)' }}>
+        <Monitor size={32} style={{ opacity: 0.3, marginBottom: 8 }} />
+        <p>Vérification...</p>
+      </div>
     </div>
   )
 
@@ -398,29 +458,34 @@ export default function Admin() {
           <div style={{ fontSize: '0.62rem', color: 'var(--text3)', textOverflow: 'ellipsis', overflow: 'hidden', maxWidth: 130 }}>{user?.email}</div>
         </div>
       </div>
+
       <nav style={{ flex: 1, padding: 8, display: 'flex', flexDirection: 'column', gap: 2 }}>
-        {menuItems.map(item => (
-          <button key={item.id} onClick={() => { setActiveMenu(item.id); setSidebarOpen(false) }}
-            style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 8, background: activeMenu === item.id ? 'var(--primary-light)' : 'none', border: 'none', color: activeMenu === item.id ? 'var(--primary)' : 'var(--text2)', fontSize: '0.875rem', fontWeight: activeMenu === item.id ? 700 : 500, width: '100%', textAlign: 'left', cursor: 'pointer' }}>
-            <span style={{ fontSize: '1rem', width: 20, textAlign: 'center' }}>{item.icon}</span>
-            {item.label}
+        {menuItems.map(({ id, label, Icon }) => (
+          <button key={id} onClick={() => { setActiveMenu(id); setSidebarOpen(false) }}
+            style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 8, background: activeMenu === id ? 'var(--primary-light)' : 'none', border: 'none', color: activeMenu === id ? 'var(--primary)' : 'var(--text2)', fontSize: '0.875rem', fontWeight: activeMenu === id ? 700 : 500, width: '100%', textAlign: 'left', cursor: 'pointer', transition: 'background 0.15s' }}>
+            <Icon size={16} style={{ flexShrink: 0 }} />
+            {label}
           </button>
         ))}
-        {/* Voir boutique - lien direct */}
-        <a href="/"
+        <a href="/" target="_blank" rel="noreferrer"
           style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 8, background: 'none', color: 'var(--text2)', fontSize: '0.875rem', fontWeight: 500, textDecoration: 'none', transition: 'background 0.15s' }}
           onMouseEnter={e => e.currentTarget.style.background = 'var(--bg3)'}
           onMouseLeave={e => e.currentTarget.style.background = 'none'}>
-          <span style={{ fontSize: '1rem', width: 20, textAlign: 'center' }}>👁</span>
+          <Eye size={16} style={{ flexShrink: 0 }} />
           Voir boutique
         </a>
       </nav>
+
       <div style={{ padding: 8, borderTop: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 2 }}>
-        <button onClick={() => setDarkMode(d => !d)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 8, background: 'none', border: 'none', color: 'var(--text2)', fontSize: '0.875rem', fontWeight: 500, cursor: 'pointer', width: '100%', textAlign: 'left' }}>
-          <span>{darkMode ? '☀️' : '🌙'}</span> {darkMode ? 'Mode clair' : 'Mode sombre'}
+        <button onClick={() => setDarkMode(d => !d)}
+          style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 8, background: 'none', border: 'none', color: 'var(--text2)', fontSize: '0.875rem', fontWeight: 500, cursor: 'pointer', width: '100%', textAlign: 'left' }}>
+          {darkMode ? <Sun size={16} /> : <Moon size={16} />}
+          {darkMode ? 'Mode clair' : 'Mode sombre'}
         </button>
-        <button onClick={logout} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 8, background: 'none', border: 'none', color: 'var(--red)', fontSize: '0.875rem', fontWeight: 600, cursor: 'pointer', width: '100%', textAlign: 'left' }}>
-          <span>🚪</span> Déconnexion
+        <button onClick={logout}
+          style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 8, background: 'none', border: 'none', color: 'var(--red)', fontSize: '0.875rem', fontWeight: 600, cursor: 'pointer', width: '100%', textAlign: 'left' }}>
+          <LogOut size={16} />
+          Déconnexion
         </button>
       </div>
     </aside>
@@ -434,10 +499,16 @@ export default function Admin() {
         <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
           <div className="mobile-topbar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: 'var(--surface)', borderBottom: '1px solid var(--border)', position: 'sticky', top: 0, zIndex: 50 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <button onClick={() => setSidebarOpen(true)} style={{ background: 'none', border: 'none', fontSize: '1.4rem', color: 'var(--text)', cursor: 'pointer' }}>☰</button>
+              <button onClick={() => setSidebarOpen(true)}
+                style={{ background: 'none', border: 'none', color: 'var(--text)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                <Menu size={22} />
+              </button>
               <span style={{ fontWeight: 700, color: 'var(--text)', fontSize: '0.9rem' }}>S.S.I Admin</span>
             </div>
-            <a href="/" target="_blank" style={{ background: 'var(--primary)', color: '#fff', borderRadius: 8, padding: '7px 14px', fontSize: '0.8rem', fontWeight: 700, textDecoration: 'none' }}>👁 Boutique</a>
+            <a href="/" target="_blank"
+              style={{ background: 'var(--primary)', color: '#fff', borderRadius: 8, padding: '7px 14px', fontSize: '0.8rem', fontWeight: 700, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Eye size={14} /> Boutique
+            </a>
           </div>
           <main style={{ flex: 1, overflowY: 'auto' }}>{renderContent()}</main>
         </div>

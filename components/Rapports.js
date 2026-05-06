@@ -9,6 +9,7 @@ export default function Rapports() {
   const [factures, setFactures] = useState([]);
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState(new Date());
+  const [selectedVente, setSelectedVente] = useState(null);
 
   const load = async () => {
     const [{ data: v }, { data: d }, { data: c }, { data: f }] = await Promise.all([
@@ -229,7 +230,7 @@ export default function Rapports() {
             ) : ventes.map(v => {
               const articles = typeof v.articles === 'string' ? JSON.parse(v.articles || '[]') : (v.articles || []);
               return (
-                <tr key={v.id}>
+                <tr key={v.id} onClick={() => setSelectedVente(v)} style={{ cursor: 'pointer' }}>
                   <td style={{ fontWeight: 700, color: 'var(--primary)' }}>{v.numero || '—'}</td>
                   <td>{v.client_nom || v.clientNom || '—'}</td>
                   <td style={{ color: 'var(--text3)', fontSize: '0.8rem' }}>{Array.isArray(articles) ? articles.length : '—'} article{Array.isArray(articles) && articles.length > 1 ? 's' : ''}</td>
@@ -238,7 +239,8 @@ export default function Rapports() {
                   <td style={{ color: 'var(--text3)', fontSize: '0.8rem' }}>{new Date(v.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</td>
                   <td>
                     <button
-                      onClick={async () => {
+                      onClick={async (e) => {
+                        e.stopPropagation();
                         if (!confirm(`Supprimer la vente ${v.numero || v.id} ?`)) return;
                         await supabase.from('ventes').delete().eq('id', v.id);
                         load();
@@ -259,7 +261,113 @@ export default function Rapports() {
           0%, 100% { opacity: 1; }
           50% { opacity: 0.3; }
         }
+        tr:hover td { background: var(--bg3) !important; }
       `}</style>
+
+      {/* Vente Detail Modal */}
+      {selectedVente && (() => {
+        const articles = typeof selectedVente.articles === 'string'
+          ? JSON.parse(selectedVente.articles || '[]')
+          : (selectedVente.articles || []);
+        const total = selectedVente.total || 0;
+        return (
+          <div onClick={() => setSelectedVente(null)}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, backdropFilter: 'blur(4px)' }}>
+            <div onClick={e => e.stopPropagation()}
+              style={{ background: 'var(--surface)', borderRadius: 16, width: '100%', maxWidth: 480, maxHeight: '90vh', overflowY: 'auto', boxShadow: 'var(--shadow-md)', animation: 'slideUp 0.2s ease' }}>
+
+              {/* Header */}
+              <div style={{ padding: '20px 24px 16px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--text3)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Reçu de vente</div>
+                  <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text)' }}>{selectedVente.numero || 'Vente'}</h2>
+                </div>
+                <button onClick={() => setSelectedVente(null)}
+                  style={{ background: 'var(--bg3)', border: 'none', borderRadius: '50%', width: 32, height: 32, cursor: 'pointer', color: 'var(--text2)', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+              </div>
+
+              {/* Info client */}
+              <div style={{ padding: '16px 24px', borderBottom: '1px solid var(--border)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <div style={{ fontSize: '0.7rem', color: 'var(--text3)', fontWeight: 600, textTransform: 'uppercase', marginBottom: 4 }}>Client</div>
+                  <div style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text)' }}>{selectedVente.client_nom || selectedVente.clientNom || 'Client anonyme'}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '0.7rem', color: 'var(--text3)', fontWeight: 600, textTransform: 'uppercase', marginBottom: 4 }}>Paiement</div>
+                  <span className={`${s.badge} ${s.badgeBlue}`}>{selectedVente.paiement || '—'}</span>
+                </div>
+                <div>
+                  <div style={{ fontSize: '0.7rem', color: 'var(--text3)', fontWeight: 600, textTransform: 'uppercase', marginBottom: 4 }}>Date</div>
+                  <div style={{ fontSize: '0.875rem', color: 'var(--text)' }}>
+                    {new Date(selectedVente.created_at).toLocaleDateString('fr-FR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })}
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '0.7rem', color: 'var(--text3)', fontWeight: 600, textTransform: 'uppercase', marginBottom: 4 }}>Heure</div>
+                  <div style={{ fontSize: '0.875rem', color: 'var(--text)' }}>
+                    {new Date(selectedVente.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                  </div>
+                </div>
+              </div>
+
+              {/* Articles */}
+              <div style={{ padding: '16px 24px', borderBottom: '1px solid var(--border)' }}>
+                <div style={{ fontSize: '0.7rem', color: 'var(--text3)', fontWeight: 600, textTransform: 'uppercase', marginBottom: 12 }}>Articles ({articles.length})</div>
+                {articles.length === 0 ? (
+                  <p style={{ color: 'var(--text3)', fontSize: '0.875rem' }}>Aucun article</p>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+                    {/* Header */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 60px 60px 80px', gap: 8, padding: '6px 10px', background: 'var(--bg3)', borderRadius: '8px 8px 0 0', fontSize: '0.68rem', fontWeight: 700, color: 'var(--text3)', textTransform: 'uppercase' }}>
+                      <span>Article</span>
+                      <span style={{ textAlign: 'center' }}>Qté</span>
+                      <span style={{ textAlign: 'right' }}>P.U.</span>
+                      <span style={{ textAlign: 'right' }}>Total</span>
+                    </div>
+                    {articles.map((a, i) => (
+                      <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 60px 60px 80px', gap: 8, padding: '10px', background: 'var(--surface)', borderBottom: '1px solid var(--border)', fontSize: '0.82rem' }}>
+                        <div>
+                          <div style={{ fontWeight: 600, color: 'var(--text)' }}>{a.name}</div>
+                          {a.storage && <div style={{ fontSize: '0.7rem', color: 'var(--text3)' }}>{a.storage}</div>}
+                        </div>
+                        <div style={{ textAlign: 'center', color: 'var(--text2)', fontWeight: 600 }}>{a.qty}</div>
+                        <div style={{ textAlign: 'right', color: 'var(--text2)' }}>{(a.price || 0).toLocaleString('fr-FR')}</div>
+                        <div style={{ textAlign: 'right', fontWeight: 700, color: 'var(--primary)' }}>{((a.price || 0) * (a.qty || 1)).toLocaleString('fr-FR')}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Total */}
+              <div style={{ padding: '16px 24px 20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg3)', borderRadius: 10, padding: '14px 18px' }}>
+                  <span style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--text)' }}>TOTAL</span>
+                  <span style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--primary)' }}>{total.toLocaleString('fr-FR')} <small style={{ fontSize: '0.8rem', fontWeight: 600 }}>FCFA</small></span>
+                </div>
+
+                {/* Actions */}
+                <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
+                  <button onClick={() => setSelectedVente(null)}
+                    style={{ flex: 1, background: 'var(--bg3)', border: '1px solid var(--border)', color: 'var(--text2)', borderRadius: 8, padding: '10px', fontSize: '0.875rem', fontWeight: 600, cursor: 'pointer' }}>
+                    Fermer
+                  </button>
+                  <button onClick={async () => {
+                    if (!confirm(`Supprimer la vente ${selectedVente.numero} ?`)) return;
+                    await supabase.from('ventes').delete().eq('id', selectedVente.id);
+                    setSelectedVente(null);
+                    load();
+                  }} style={{ flex: 1, background: 'var(--red-light)', border: '1px solid var(--red)', color: 'var(--red)', borderRadius: 8, padding: '10px', fontSize: '0.875rem', fontWeight: 600, cursor: 'pointer' }}>
+                    🗑 Supprimer
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      <style>{`@keyframes slideUp{from{transform:translateY(12px);opacity:0}to{transform:translateY(0);opacity:1}}`}</style>
     </div>
   );
 }

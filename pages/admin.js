@@ -433,7 +433,7 @@ export default function Admin() {
       case 'events': return <Events events={events} setEvents={setEvents} />
       case 'factures': return <Factures factures={factures} setFactures={setFactures} clients={clients} ventes={ventes} />
       case 'clients': return <Clients clients={clients} setClients={setClients} />
-      case 'depenses': return <Depenses depenses={depenses} setDepenses={setDepenses} />
+      case 'depenses': return <Depenses /> 
       case 'rapports': return <Rapports />
       case 'devis': return <Devis devis={devis} setDevis={setDevis} setFactures={setFactures} clients={clients} />
       default: return null

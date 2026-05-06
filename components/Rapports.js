@@ -208,7 +208,7 @@ export default function Rapports() {
       {/* Dernières ventes */}
       <div className={s.tableWrap}>
         <div style={{ padding: '14px 16px', fontWeight: 700, color: 'var(--text)', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span>🕐 Dernières ventes</span>
+          <span>🕐 Toutes les ventes</span>
           <span style={{ fontSize: '0.75rem', color: 'var(--text3)', fontWeight: 400 }}>{ventes.length} au total</span>
         </div>
         <table className={s.table}>
@@ -220,12 +220,13 @@ export default function Rapports() {
               <th>Paiement</th>
               <th>Total</th>
               <th>Date</th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
             {ventes.length === 0 ? (
-              <tr><td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--text3)' }}>Aucune vente enregistrée</td></tr>
-            ) : ventes.slice(0, 15).map(v => {
+              <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--text3)' }}>Aucune vente enregistrée</td></tr>
+            ) : ventes.map(v => {
               const articles = typeof v.articles === 'string' ? JSON.parse(v.articles || '[]') : (v.articles || []);
               return (
                 <tr key={v.id}>
@@ -235,6 +236,17 @@ export default function Rapports() {
                   <td><span className={`${s.badge} ${s.badgeBlue}`}>{v.paiement || '—'}</span></td>
                   <td style={{ fontWeight: 700 }}>{(v.total || 0).toLocaleString('fr-FR')} FCFA</td>
                   <td style={{ color: 'var(--text3)', fontSize: '0.8rem' }}>{new Date(v.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</td>
+                  <td>
+                    <button
+                      onClick={async () => {
+                        if (!confirm(`Supprimer la vente ${v.numero || v.id} ?`)) return;
+                        await supabase.from('ventes').delete().eq('id', v.id);
+                        load();
+                      }}
+                      style={{ background: 'var(--red-light)', color: 'var(--red)', border: '1px solid var(--red)', borderRadius: 6, padding: '4px 8px', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer' }}>
+                      🗑
+                    </button>
+                  </td>
                 </tr>
               );
             })}

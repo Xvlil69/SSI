@@ -48,7 +48,15 @@ function ProductModal({ product, onClose, onImageClick, dark }) {
         <div style={{ padding: '24px 24px 32px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
             <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: text, lineHeight: 1.25, flex: 1, paddingRight: 16 }}>{product.name}</h2>
-            <span style={{ background: '#f0fdf4', border: '1.5px solid #86efac', color: '#16a34a', fontSize: '0.72rem', fontWeight: 700, padding: '4px 10px', borderRadius: 20, whiteSpace: 'nowrap' }}>✅ Disponible</span>
+          <span style={{
+  background: product.status === 'rupture' ? '#fef2f2' : '#f0fdf4',
+  border: `1.5px solid ${product.status === 'rupture' ? '#fecaca' : '#86efac'}`,
+  color: product.status === 'rupture' ? '#dc2626' : '#16a34a',
+  fontSize: '0.72rem', fontWeight: 700, padding: '4px 10px', 
+  borderRadius: 20, whiteSpace: 'nowrap', flexShrink: 0
+}}>
+  {product.status === 'rupture' ? '🔴 Rupture' : '✅ Disponible'}
+</span>
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginBottom: 16 }}>
             {[product.brand, product.storage, product.color].filter(Boolean).map(t => (

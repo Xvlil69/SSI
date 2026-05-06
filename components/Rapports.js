@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import s from '../styles/shared.module.css';
+import { BarChart2, RefreshCw, TrendingUp, TrendingDown, Sparkles, ShoppingCart, Receipt, Users, CreditCard, Trash2, X, Package } from 'lucide-react';
 
 export default function Rapports() {
   const [ventes, setVentes] = useState([]);
@@ -96,14 +97,14 @@ export default function Rapports() {
     <div className={s.page}>
       {/* Header */}
       <div className={s.pageHeader}>
-        <h1 className={s.pageTitle}><span>📊</span> Rapports & Statistiques</h1>
+        <h1 className={s.pageTitle} style={{ display: 'flex', alignItems: 'center', gap: 8 }}><BarChart2 size={22} /> Rapports & Statistiques</h1>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.78rem', color: 'var(--text3)' }}>
             <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#16a34a', display: 'inline-block', animation: 'pulse 2s infinite' }} />
             Temps réel · Màj {lastUpdate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
           </div>
-          <button onClick={load} style={{ background: 'var(--primary-light)', border: '1px solid var(--primary)', color: 'var(--primary)', borderRadius: 8, padding: '7px 14px', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer' }}>
-            🔄 Actualiser
+          <button onClick={load} style={{ background: 'var(--primary-light)', border: '1px solid var(--primary)', color: 'var(--primary)', borderRadius: 8, padding: '7px 14px', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <RefreshCw size={14} /> Actualiser
           </button>
         </div>
       </div>
@@ -111,19 +112,19 @@ export default function Rapports() {
       {/* KPI Stats */}
       <div className={s.statsGrid}>
         <div className={s.statCard}>
-          <span className={s.statIcon}>💰</span>
+          <TrendingUp size={22} style={{ color: 'var(--primary)' }} />
           <span className={s.statNum}>{(caMois / 1000).toFixed(0)}K</span>
           <span className={s.statLabel}>CA ce mois (FCFA)</span>
           <span className={s.statSub}>Total: {(caTotal / 1000).toFixed(0)}K FCFA</span>
         </div>
         <div className={s.statCard}>
-          <span className={s.statIcon}>📉</span>
+          <TrendingDown size={22} style={{ color: 'var(--red)' }} />
           <span className={s.statNum} style={{ color: 'var(--red)' }}>{(depMois / 1000).toFixed(0)}K</span>
           <span className={s.statLabel}>Dépenses ce mois</span>
           <span className={s.statSub}>Total: {(depTotal / 1000).toFixed(0)}K FCFA</span>
         </div>
         <div className={s.statCard}>
-          <span className={s.statIcon}>✨</span>
+          <Sparkles size={22} style={{ color: beneficeMois >= 0 ? 'var(--green)' : 'var(--red)' }} />
           <span className={s.statNum} style={{ color: beneficeMois >= 0 ? 'var(--green)' : 'var(--red)' }}>
             {beneficeMois >= 0 ? '+' : ''}{(beneficeMois / 1000).toFixed(0)}K
           </span>
@@ -133,32 +134,30 @@ export default function Rapports() {
           </span>
         </div>
         <div className={s.statCard}>
-          <span className={s.statIcon}>🛒</span>
+          <ShoppingCart size={22} style={{ color: 'var(--primary)' }} />
           <span className={s.statNum}>{nbVentesMois}</span>
           <span className={s.statLabel}>Ventes ce mois</span>
           <span className={s.statSub}>Total: {ventes.length} ventes</span>
         </div>
         <div className={s.statCard}>
-          <span className={s.statIcon}>🧾</span>
+          <Receipt size={22} style={{ color: 'var(--orange)' }} />
           <span className={s.statNum}>{(panierMoyen / 1000).toFixed(0)}K</span>
           <span className={s.statLabel}>Panier moyen</span>
         </div>
         <div className={s.statCard}>
-          <span className={s.statIcon}>👥</span>
+          <Users size={22} style={{ color: 'var(--primary)' }} />
           <span className={s.statNum}>{clients.length}</span>
           <span className={s.statLabel}>Total clients</span>
-          <span className={s.statSub}>
-            {clients.filter(c => thisMonth(c.created_at)).length} ce mois
-          </span>
+          <span className={s.statSub}>{clients.filter(c => thisMonth(c.created_at)).length} ce mois</span>
         </div>
         <div className={s.statCard}>
-          <span className={s.statIcon}>📄</span>
+          <CreditCard size={22} style={{ color: 'var(--orange)' }} />
           <span className={s.statNum}>{factures.filter(f => f.statut === 'en_attente').length}</span>
           <span className={s.statLabel}>Factures en attente</span>
           <span className={s.statSub}>{factures.filter(f => f.statut === 'payee').length} payées</span>
         </div>
         <div className={s.statCard}>
-          <span className={s.statIcon}>💳</span>
+          <Package size={22} style={{ color: 'var(--green)' }} />
           <span className={s.statNum}>
             {(factures.filter(f => f.statut === 'payee').reduce((s, f) => s + (f.total || 0), 0) / 1000).toFixed(0)}K
           </span>
@@ -245,8 +244,8 @@ export default function Rapports() {
                         await supabase.from('ventes').delete().eq('id', v.id);
                         load();
                       }}
-                      style={{ background: 'var(--red-light)', color: 'var(--red)', border: '1px solid var(--red)', borderRadius: 6, padding: '4px 8px', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer' }}>
-                      🗑
+                      style={{ background: 'var(--red-light)', color: 'var(--red)', border: '1px solid var(--red)', borderRadius: 6, padding: '4px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                      <Trash2 size={13} />
                     </button>
                   </td>
                 </tr>
@@ -283,7 +282,9 @@ export default function Rapports() {
                   <h2 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text)' }}>{selectedVente.numero || 'Vente'}</h2>
                 </div>
                 <button onClick={() => setSelectedVente(null)}
-                  style={{ background: 'var(--bg3)', border: 'none', borderRadius: '50%', width: 32, height: 32, cursor: 'pointer', color: 'var(--text2)', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+                  style={{ background: 'var(--bg3)', border: 'none', borderRadius: '50%', width: 32, height: 32, cursor: 'pointer', color: 'var(--text2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <X size={16} />
+                </button>
               </div>
 
               {/* Info client */}
@@ -349,16 +350,16 @@ export default function Rapports() {
                 {/* Actions */}
                 <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
                   <button onClick={() => setSelectedVente(null)}
-                    style={{ flex: 1, background: 'var(--bg3)', border: '1px solid var(--border)', color: 'var(--text2)', borderRadius: 8, padding: '10px', fontSize: '0.875rem', fontWeight: 600, cursor: 'pointer' }}>
-                    Fermer
+                    style={{ flex: 1, background: 'var(--bg3)', border: '1px solid var(--border)', color: 'var(--text2)', borderRadius: 8, padding: '10px', fontSize: '0.875rem', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                    <X size={15} /> Fermer
                   </button>
                   <button onClick={async () => {
                     if (!confirm(`Supprimer la vente ${selectedVente.numero} ?`)) return;
                     await supabase.from('ventes').delete().eq('id', selectedVente.id);
                     setSelectedVente(null);
                     load();
-                  }} style={{ flex: 1, background: 'var(--red-light)', border: '1px solid var(--red)', color: 'var(--red)', borderRadius: 8, padding: '10px', fontSize: '0.875rem', fontWeight: 600, cursor: 'pointer' }}>
-                    🗑 Supprimer
+                  }} style={{ flex: 1, background: 'var(--red-light)', border: '1px solid var(--red)', color: 'var(--red)', borderRadius: 8, padding: '10px', fontSize: '0.875rem', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                    <Trash2 size={15} /> Supprimer
                   </button>
                 </div>
               </div>

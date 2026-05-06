@@ -43,7 +43,7 @@ function ProductModal({ product, onClose, onImageClick, dark }) {
           {product.image_url
             ? <img src={product.image_url} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.4s' }} onMouseEnter={e => e.target.style.transform = 'scale(1.04)'} onMouseLeave={e => e.target.style.transform = ''} />
             : <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '4rem', opacity: 0.15 }}>💻</div>}
-          {product.image_url && <div style={{ position: 'absolute', bottom: 310 - 40, right: 12, background: 'rgba(0,0,0,0.45)', color: '#fff', borderRadius: 6, padding: '3px 10px', fontSize: '0.7rem', fontWeight: 600, backdropFilter: 'blur(4px)' }}></div>}
+          {product.image_url && <div style={{ position: 'absolute', bottom: 310 - 40, right: 12, background: 'rgba(0,0,0,0.45)', color: '#fff', borderRadius: 6, padding: '3px 10px', fontSize: '0.7rem', fontWeight: 600, backdropFilter: 'blur(4px)' }}> </div>}
         </div>
         <div style={{ padding: '24px 24px 32px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>

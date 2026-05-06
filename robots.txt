@@ -1,0 +1,9 @@
+<Head>
+  <title>Seye Senghor Informatique — Vente Ordinateurs & Accessoires | Keur Massar Dakar</title>
+  <meta name="description" content="SSI - Seye Senghor Informatique : vente d'ordinateurs, smartphones, accessoires à Keur Massar, Dakar, Sénégal. HP, Dell, Lenovo, Apple. ☎️ +221 777042635" />
+  <meta name="keywords" content="ordinateur Dakar, vente ordinateur Sénégal, informatique Keur Massar, laptop Dakar, PC portable Sénégal, SSI informatique, Seye Senghor" />
+  <link rel="canonical" href="https://ssi-jet.vercel.app/" />
+  <meta property="og:title" content="Seye Senghor Informatique — Dakar" />
+  <meta property="og:description" content="Votre magasin informatique à Keur Massar, Dakar. ☎️ +221 777042635" />
+  <meta property="og:image" content="https://ssi-jet.vercel.app/logo.png" />
+</Head>

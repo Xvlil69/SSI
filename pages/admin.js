@@ -407,7 +407,7 @@ export default function Admin() {
           </button>
         ))}
         {/* Voir boutique - lien direct */}
-        <a href="/" target="_blank" rel="noreferrer"
+        <a href="/"
           style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 8, background: 'none', color: 'var(--text2)', fontSize: '0.875rem', fontWeight: 500, textDecoration: 'none', transition: 'background 0.15s' }}
           onMouseEnter={e => e.currentTarget.style.background = 'var(--bg3)'}
           onMouseLeave={e => e.currentTarget.style.background = 'none'}>

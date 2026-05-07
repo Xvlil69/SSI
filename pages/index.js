@@ -1,9 +1,15 @@
 import { useState, useEffect, useMemo } from 'react'
 import Head from 'next/head'
 import { supabase } from '../lib/supabase'
-import { Store, MessageCircle, Moon, Sun, MapPin, Phone, Package, Search, ChevronLeft, ChevronRight, Tag, Cpu, CheckCircle, Flame, Lock } from 'lucide-react'
+import { Store, Moon, Sun, MapPin, Phone, Package, Search, ChevronLeft, ChevronRight, Cpu, CheckCircle, Flame, Lock } from 'lucide-react'
 
 const WHATSAPP = '221777042635'
+
+const WhatsAppIcon = ({ size = 18 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" style={{ flexShrink: 0 }}>
+    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347zM12 0C5.373 0 0 5.373 0 12c0 2.136.564 4.14 1.544 5.876L.057 23.886a.5.5 0 0 0 .606.62l6.218-1.635A11.945 11.945 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.907 0-3.686-.523-5.204-1.43l-.368-.217-3.843 1.01 1.032-3.742-.239-.386A9.944 9.944 0 0 1 2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/>
+  </svg>
+)
 
 function ImageViewer({ src, alt, onClose }) {
   useEffect(() => {
@@ -148,7 +154,7 @@ function ProductModal({ product, onClose, onImageClick, dark }) {
           ) : (
             <a href={`https://wa.me/${product.whatsapp_number || WHATSAPP}?text=${msg}`} target="_blank" rel="noreferrer"
               style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, background: 'linear-gradient(135deg,#16a34a,#15803d)', color: '#fff', borderRadius: 14, padding: '15px 20px', fontSize: '1rem', fontWeight: 700, textDecoration: 'none', boxShadow: '0 4px 16px rgba(22,163,74,0.35)' }}>
-              <span style={{ fontSize: '1.2rem' }}>💬</span> Contacter sur WhatsApp
+              <WhatsAppIcon size={20} /> Contacter sur WhatsApp
             </a>
           )}
         </div>
@@ -204,14 +210,14 @@ function ProductCard({ product, onClick, onImageClick, index, dark }) {
           <div style={{ fontSize: '1.15rem', fontWeight: 900, color: isRupture ? tag2 : '#1a56db', letterSpacing: '-0.01em', marginBottom: 10 }}>
             {product.price.toLocaleString('fr-FR')} <span style={{ fontSize: '0.75rem', fontWeight: 600, color: tag2 }}>FCFA</span>
           </div>
-          <button onClick={e => {
-            e.stopPropagation()
-            if (isRupture) return
-            const msg = encodeURIComponent(`Bonjour SSI,\nJe suis intéressé par *${product.name}*${product.storage ? ' - ' + product.storage : ''} à *${product.price.toLocaleString('fr-FR')} FCFA*.\n\nEst-il disponible ?`)
-            window.open(`https://wa.me/${product.whatsapp_number || WHATSAPP}?text=${msg}`, '_blank')
-          }} style={{ width: '100%', background: isRupture ? (dark ? '#2d3148' : '#f1f5f9') : 'linear-gradient(135deg,#16a34a,#15803d)', color: isRupture ? tag2 : '#fff', border: 'none', borderRadius: 10, padding: '10px 12px', fontSize: '0.82rem', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, cursor: isRupture ? 'not-allowed' : 'pointer', boxShadow: isRupture ? 'none' : '0 2px 8px rgba(22,163,74,0.3)', transition: 'transform 0.15s' }}>
+          <a
+            href={isRupture ? undefined : `https://wa.me/${product.whatsapp_number || WHATSAPP}?text=${encodeURIComponent(`Bonjour SSI,\nJe suis intéressé par *${product.name}*${product.storage ? ' - ' + product.storage : ''} à *${product.price.toLocaleString('fr-FR')} FCFA*.\n\nEst-il disponible ?`)}`}
+            target="_blank"
+            rel="noreferrer"
+            onClick={e => e.stopPropagation()}
+            style={{ width: '100%', background: isRupture ? (dark ? '#2d3148' : '#f1f5f9') : 'linear-gradient(135deg,#16a34a,#15803d)', color: isRupture ? tag2 : '#fff', border: 'none', borderRadius: 10, padding: '10px 12px', fontSize: '0.82rem', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, cursor: isRupture ? 'not-allowed' : 'pointer', boxShadow: isRupture ? 'none' : '0 2px 8px rgba(22,163,74,0.3)', textDecoration: 'none', pointerEvents: isRupture ? 'none' : 'auto' }}>
             {isRupture ? '🔴 Rupture de stock' : <><span>💬</span> Contacter sur WhatsApp</>}
-          </button>
+          </a>
         </div>
       </div>
     </div>
@@ -338,7 +344,7 @@ export default function Catalogue() {
         <a href={`https://wa.me/${WHATSAPP}`} target="_blank" rel="noreferrer"
           style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 10, background: dark ? 'rgba(22,163,74,0.15)' : 'linear-gradient(135deg,#f0fdf4,#dcfce7)', border: '1px solid #bbf7d0', color: '#15803d', fontSize: '0.85rem', fontWeight: 700, textDecoration: 'none' }}>
           <span style={{ width: 28, height: 28, borderRadius: 7, background: 'rgba(22,163,74,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <MessageCircle size={14} style={{ color: '#16a34a' }} />
+            <WhatsAppIcon size={14} />
           </span>
           WhatsApp
         </a>
@@ -382,7 +388,7 @@ export default function Catalogue() {
                 {dark ? <Sun size={16} style={{ color: '#fbbf24' }} /> : <Moon size={16} style={{ color: D.text2 }} />}
               </button>
               <a href={`https://wa.me/${WHATSAPP}`} target="_blank" rel="noreferrer" style={{ background: 'linear-gradient(135deg,#16a34a,#15803d)', color: '#fff', borderRadius: 10, padding: '8px 14px', fontSize: '0.78rem', fontWeight: 700, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
-                <MessageCircle size={14} /> WhatsApp
+                <WhatsAppIcon size={14} /> WhatsApp
               </a>
             </div>
           </div>
@@ -399,7 +405,7 @@ export default function Catalogue() {
               </div>
             </div>
             <a href={`https://wa.me/${WHATSAPP}`} target="_blank" rel="noreferrer" style={{ background: 'linear-gradient(135deg,#16a34a,#15803d)', color: '#fff', borderRadius: 12, padding: '11px 22px', fontSize: '0.9rem', fontWeight: 700, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 8, boxShadow: '0 4px 14px rgba(22,163,74,0.35)' }}>
-              <MessageCircle size={18} /> WhatsApp
+              <WhatsAppIcon size={18} /> WhatsApp
             </a>
           </div>
 
@@ -469,7 +475,7 @@ export default function Catalogue() {
                     Catalogue<br /><small style={{ fontWeight: 400, color: 'rgba(255,255,255,0.6)', fontSize: '0.72rem', display: 'block' }}>Parcourez votre modèle</small>
                   </button>
                   <a href={`https://wa.me/${WHATSAPP}`} target="_blank" rel="noreferrer" style={{ flex: 1, minWidth: 160, background: 'linear-gradient(135deg,#16a34a,#15803d)', border: 'none', borderRadius: 14, padding: '14px 20px', color: '#fff', fontSize: '0.875rem', fontWeight: 700, lineHeight: 1.6, textDecoration: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, boxShadow: '0 4px 16px rgba(22,163,74,0.4)' }}>
-                    <MessageCircle size={18} style={{ opacity: 0.9 }} />
+                    <WhatsAppIcon size={18} />
                     WhatsApp<br /><small style={{ fontWeight: 400, color: 'rgba(255,255,255,0.7)', fontSize: '0.72rem' }}>Commandez directement</small>
                   </a>
                 </div>
@@ -509,7 +515,7 @@ export default function Catalogue() {
               </div>
               <div style={{ display: 'flex', gap: 10 }}>
                 <a href={`https://wa.me/${WHATSAPP}`} target="_blank" rel="noreferrer" style={{ background: '#16a34a', color: '#fff', borderRadius: 10, padding: '9px 18px', fontSize: '0.82rem', fontWeight: 700, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <MessageCircle size={14} /> WhatsApp
+                  <WhatsAppIcon size={14} /> WhatsApp
                 </a>
                 <a href="/login" style={{ background: 'rgba(255,255,255,0.08)', color: '#94a3b8', borderRadius: 10, padding: '9px 16px', fontSize: '0.82rem', fontWeight: 500, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
                   <Lock size={13} /> Admin

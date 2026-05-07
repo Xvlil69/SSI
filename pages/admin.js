@@ -30,6 +30,7 @@ function GestionProduits({ categories }) {
   })
   const [imageFile, setImageFile] = useState(null)
   const [imagePreview, setImagePreview] = useState('')
+  const [extraImages, setExtraImages] = useState([]) // [{url, file, preview}]
   const [saving, setSaving] = useState(false)
 
   const load = async () => {
@@ -52,6 +53,9 @@ function GestionProduits({ categories }) {
       })
       setImagePreview(product.image_url || '')
       setEditProduct(product)
+      // Load extra images
+      const extras = Array.isArray(product.images) ? product.images.map(url => ({ url, file: null, preview: url })) : []
+      setExtraImages(extras)
     } else {
       setForm({
         name: '', category_id: categories[0]?.id || '', brand: '', storage: '',
@@ -60,6 +64,7 @@ function GestionProduits({ categories }) {
       })
       setImagePreview('')
       setEditProduct(null)
+      setExtraImages([])
     }
     setImageFile(null)
     setShowForm(true)
@@ -72,12 +77,38 @@ function GestionProduits({ categories }) {
     setImagePreview(URL.createObjectURL(file))
   }
 
+  const handleExtraImage = (e) => {
+    const files = Array.from(e.target.files)
+    const remaining = 4 - extraImages.length
+    const toAdd = files.slice(0, remaining)
+    const newEntries = toAdd.map(file => ({ file, url: '', preview: URL.createObjectURL(file) }))
+    setExtraImages(prev => [...prev, ...newEntries])
+    e.target.value = ''
+  }
+
+  const removeExtraImage = (index) => {
+    setExtraImages(prev => prev.filter((_, i) => i !== index))
+  }
+
   const save = async () => {
     if (!form.name.trim() || !form.price) return
     setSaving(true)
+    // Upload main image
     let imageUrl = form.image_url
     if (imageFile) {
       try { imageUrl = await uploadImage(imageFile) } catch (e) { alert('Erreur upload image: ' + e.message); setSaving(false); return }
+    }
+    // Upload extra images
+    const uploadedExtras = []
+    for (const img of extraImages) {
+      if (img.file) {
+        try {
+          const url = await uploadImage(img.file)
+          uploadedExtras.push(url)
+        } catch (e) { console.error('Extra image upload error', e) }
+      } else if (img.url) {
+        uploadedExtras.push(img.url)
+      }
     }
     const payload = {
       ...form,
@@ -85,6 +116,7 @@ function GestionProduits({ categories }) {
       stock: parseInt(form.stock) || 0,
       stock_alerte: parseInt(form.stock_alerte) || 3,
       image_url: imageUrl,
+      images: uploadedExtras,
       updated_at: new Date().toISOString()
     }
     if (editProduct) {
@@ -94,6 +126,7 @@ function GestionProduits({ categories }) {
     }
     setSaving(false)
     setShowForm(false)
+    setExtraImages([])
     load()
   }
 
@@ -198,21 +231,55 @@ function GestionProduits({ categories }) {
             </h3>
 
             <div style={{ marginBottom: 16 }}>
-              <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text2)', display: 'block', marginBottom: 8 }}>Image du produit</label>
-              <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                <div style={{ width: 100, height: 100, border: '2px dashed var(--border2)', borderRadius: 10, overflow: 'hidden', flexShrink: 0, background: 'var(--bg3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  {imagePreview
-                    ? <img src={imagePreview} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    : <Upload size={24} style={{ opacity: 0.3 }} />}
+              <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text2)', display: 'block', marginBottom: 8 }}>
+                Images du produit <span style={{ color: 'var(--text3)', fontWeight: 400 }}>(1 principale + jusqu'à 4 secondaires)</span>
+              </label>
+
+              {/* Main image */}
+              <div style={{ marginBottom: 12 }}>
+                <div style={{ fontSize: '0.72rem', color: 'var(--text3)', marginBottom: 6, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Image principale</div>
+                <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                  <div style={{ width: 90, height: 90, border: '2px dashed var(--border2)', borderRadius: 10, overflow: 'hidden', flexShrink: 0, background: 'var(--bg3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {imagePreview
+                      ? <img src={imagePreview} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      : <Upload size={24} style={{ opacity: 0.3 }} />}
+                  </div>
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <label style={{ background: 'var(--primary)', color: '#fff', borderRadius: 8, padding: '8px 14px', fontSize: '0.82rem', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                      <Upload size={14} /> Choisir une image
+                      <input type="file" accept="image/*" onChange={handleImage} style={{ display: 'none' }} />
+                    </label>
+                    <input value={form.image_url} onChange={e => { setForm(f => ({ ...f, image_url: e.target.value })); setImagePreview(e.target.value) }}
+                      placeholder="Ou coller une URL d'image..."
+                      style={{ background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 8, padding: '8px 12px', fontSize: '0.8rem', color: 'var(--text)', width: '100%' }} />
+                  </div>
                 </div>
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  <label style={{ background: 'var(--primary)', color: '#fff', borderRadius: 8, padding: '9px 14px', fontSize: '0.82rem', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-                    <Upload size={14} /> Choisir une image
-                    <input type="file" accept="image/*" onChange={handleImage} style={{ display: 'none' }} />
-                  </label>
-                  <input value={form.image_url} onChange={e => { setForm(f => ({ ...f, image_url: e.target.value })); setImagePreview(e.target.value) }}
-                    placeholder="Ou coller une URL d'image..."
-                    style={{ background: 'var(--bg3)', border: '1px solid var(--border)', borderRadius: 8, padding: '9px 12px', fontSize: '0.8rem', color: 'var(--text)', width: '100%' }} />
+              </div>
+
+              {/* Extra images */}
+              <div>
+                <div style={{ fontSize: '0.72rem', color: 'var(--text3)', marginBottom: 8, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', justifyContent: 'space-between' }}>
+                  <span>Photos supplémentaires ({extraImages.length}/4)</span>
+                </div>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'flex-start' }}>
+                  {extraImages.map((img, i) => (
+                    <div key={i} style={{ position: 'relative', width: 80, height: 80, borderRadius: 8, overflow: 'hidden', border: '1px solid var(--border)', flexShrink: 0 }}>
+                      <img src={img.preview} alt={`extra-${i}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <button onClick={() => removeExtraImage(i)}
+                        style={{ position: 'absolute', top: 3, right: 3, background: 'rgba(220,38,38,0.85)', border: 'none', borderRadius: '50%', width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#fff' }}>
+                        <X size={11} />
+                      </button>
+                    </div>
+                  ))}
+                  {extraImages.length < 4 && (
+                    <label style={{ width: 80, height: 80, border: '2px dashed var(--border2)', borderRadius: 8, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, cursor: 'pointer', background: 'var(--bg3)', flexShrink: 0, transition: 'border-color 0.15s' }}
+                      onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--primary)'}
+                      onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border2)'}>
+                      <Plus size={18} style={{ opacity: 0.4 }} />
+                      <span style={{ fontSize: '0.6rem', color: 'var(--text3)', fontWeight: 600 }}>Ajouter</span>
+                      <input type="file" accept="image/*" multiple onChange={handleExtraImage} style={{ display: 'none' }} />
+                    </label>
+                  )}
                 </div>
               </div>
             </div>
@@ -412,16 +479,16 @@ export default function Admin() {
   const addVente = (v) => setVentes(prev => [v, ...prev])
 
   const menuItems = [
-    { id: 'produits', label: 'Produits', Icon: LayoutGrid },
-    { id: 'categories', label: 'Rubriques', Icon: FolderOpen },
-    { id: 'caisse', label: 'Caisse POS', Icon: Monitor },
-    { id: 'action', label: 'Actions', Icon: Zap },
-    { id: 'events', label: 'Évents', Icon: ShoppingCart },
-    { id: 'factures', label: 'Factures', Icon: FileText },
-    { id: 'clients', label: 'Clients', Icon: Users },
-    { id: 'depenses', label: 'Dépenses', Icon: Wallet },
-    { id: 'rapports', label: 'Rapports', Icon: BarChart2 },
-    { id: 'devis', label: 'Devis', Icon: ClipboardList },
+    { id: 'produits',    label: 'Produits',    Icon: LayoutGrid,   color: '#6366f1', bg: 'rgba(99,102,241,0.12)' },
+    { id: 'categories', label: 'Rubriques',   Icon: FolderOpen,   color: '#f59e0b', bg: 'rgba(245,158,11,0.12)' },
+    { id: 'caisse',     label: 'Caisse POS',  Icon: Monitor,      color: '#10b981', bg: 'rgba(16,185,129,0.12)' },
+    { id: 'action',     label: 'Actions',     Icon: Zap,          color: '#f97316', bg: 'rgba(249,115,22,0.12)' },
+    { id: 'events',     label: 'Évents',      Icon: ShoppingCart, color: '#8b5cf6', bg: 'rgba(139,92,246,0.12)' },
+    { id: 'factures',   label: 'Factures',    Icon: FileText,     color: '#3b82f6', bg: 'rgba(59,130,246,0.12)' },
+    { id: 'clients',    label: 'Clients',     Icon: Users,        color: '#ec4899', bg: 'rgba(236,72,153,0.12)' },
+    { id: 'depenses',   label: 'Dépenses',    Icon: Wallet,       color: '#ef4444', bg: 'rgba(239,68,68,0.12)' },
+    { id: 'rapports',   label: 'Rapports',    Icon: BarChart2,    color: '#06b6d4', bg: 'rgba(6,182,212,0.12)' },
+    { id: 'devis',      label: 'Devis',       Icon: ClipboardList,color: '#84cc16', bg: 'rgba(132,204,22,0.12)' },
   ]
 
   const renderContent = () => {
@@ -433,7 +500,7 @@ export default function Admin() {
       case 'events': return <Events events={events} setEvents={setEvents} />
       case 'factures': return <Factures factures={factures} setFactures={setFactures} clients={clients} ventes={ventes} />
       case 'clients': return <Clients clients={clients} setClients={setClients} />
-      case 'depenses': return <Depenses /> 
+      case 'depenses': return <Depenses depenses={depenses} setDepenses={setDepenses} />
       case 'rapports': return <Rapports />
       case 'devis': return <Devis devis={devis} setDevis={setDevis} setFactures={setFactures} clients={clients} />
       default: return null
@@ -459,32 +526,47 @@ export default function Admin() {
         </div>
       </div>
 
-      <nav style={{ flex: 1, padding: 8, display: 'flex', flexDirection: 'column', gap: 2 }}>
-        {menuItems.map(({ id, label, Icon }) => (
-          <button key={id} onClick={() => { setActiveMenu(id); setSidebarOpen(false) }}
-            style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 8, background: activeMenu === id ? 'var(--primary-light)' : 'none', border: 'none', color: activeMenu === id ? 'var(--primary)' : 'var(--text2)', fontSize: '0.875rem', fontWeight: activeMenu === id ? 700 : 500, width: '100%', textAlign: 'left', cursor: 'pointer', transition: 'background 0.15s' }}>
-            <Icon size={16} style={{ flexShrink: 0 }} />
-            {label}
-          </button>
-        ))}
+      <nav style={{ flex: 1, padding: '8px 8px', display: 'flex', flexDirection: 'column', gap: 1 }}>
+        {menuItems.map(({ id, label, Icon, color, bg }) => {
+          const isActive = activeMenu === id
+          return (
+            <button key={id} onClick={() => { setActiveMenu(id); setSidebarOpen(false) }}
+              style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 9, background: isActive ? 'var(--primary-light)' : 'none', border: 'none', color: isActive ? 'var(--primary)' : 'var(--text2)', fontSize: '0.855rem', fontWeight: isActive ? 700 : 500, width: '100%', textAlign: 'left', cursor: 'pointer', transition: 'all 0.15s' }}>
+              <span style={{ width: 28, height: 28, borderRadius: 7, background: isActive ? color : bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 0.15s' }}>
+                <Icon size={14} style={{ color: isActive ? '#fff' : color }} />
+              </span>
+              {label}
+            </button>
+          )
+        })}
         <a href="/" target="_blank" rel="noreferrer"
-          style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 8, background: 'none', color: 'var(--text2)', fontSize: '0.875rem', fontWeight: 500, textDecoration: 'none', transition: 'background 0.15s' }}
+          style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 9, background: 'none', color: 'var(--text2)', fontSize: '0.855rem', fontWeight: 500, textDecoration: 'none', transition: 'all 0.15s', marginTop: 4 }}
           onMouseEnter={e => e.currentTarget.style.background = 'var(--bg3)'}
           onMouseLeave={e => e.currentTarget.style.background = 'none'}>
-          <Eye size={16} style={{ flexShrink: 0 }} />
+          <span style={{ width: 28, height: 28, borderRadius: 7, background: 'rgba(14,165,233,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <Eye size={14} style={{ color: '#0ea5e9' }} />
+          </span>
           Voir boutique
         </a>
       </nav>
 
-      <div style={{ padding: 8, borderTop: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <div style={{ padding: '8px 8px 12px', borderTop: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 1 }}>
         <button onClick={() => setDarkMode(d => !d)}
-          style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 8, background: 'none', border: 'none', color: 'var(--text2)', fontSize: '0.875rem', fontWeight: 500, cursor: 'pointer', width: '100%', textAlign: 'left' }}>
-          {darkMode ? <Sun size={16} /> : <Moon size={16} />}
+          style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 9, background: 'none', border: 'none', color: 'var(--text2)', fontSize: '0.855rem', fontWeight: 500, cursor: 'pointer', width: '100%', textAlign: 'left', transition: 'background 0.15s' }}
+          onMouseEnter={e => e.currentTarget.style.background = 'var(--bg3)'}
+          onMouseLeave={e => e.currentTarget.style.background = 'none'}>
+          <span style={{ width: 28, height: 28, borderRadius: 7, background: 'rgba(251,191,36,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            {darkMode ? <Sun size={14} style={{ color: '#fbbf24' }} /> : <Moon size={14} style={{ color: '#fbbf24' }} />}
+          </span>
           {darkMode ? 'Mode clair' : 'Mode sombre'}
         </button>
         <button onClick={logout}
-          style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 8, background: 'none', border: 'none', color: 'var(--red)', fontSize: '0.875rem', fontWeight: 600, cursor: 'pointer', width: '100%', textAlign: 'left' }}>
-          <LogOut size={16} />
+          style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 9, background: 'none', border: 'none', color: 'var(--red)', fontSize: '0.855rem', fontWeight: 600, cursor: 'pointer', width: '100%', textAlign: 'left', transition: 'background 0.15s' }}
+          onMouseEnter={e => e.currentTarget.style.background = 'var(--red-light)'}
+          onMouseLeave={e => e.currentTarget.style.background = 'none'}>
+          <span style={{ width: 28, height: 28, borderRadius: 7, background: 'rgba(239,68,68,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <LogOut size={14} style={{ color: 'var(--red)' }} />
+          </span>
           Déconnexion
         </button>
       </div>

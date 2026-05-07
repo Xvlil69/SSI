@@ -22,86 +22,171 @@ function ImageViewer({ src, alt, onClose }) {
 
 function ProductModal({ product, onClose, onImageClick, dark }) {
   if (!product) return null
+  const isRupture = product.status === 'rupture'
+  const allImages = [product.image_url, ...(Array.isArray(product.images) ? product.images : [])].filter(Boolean)
+  const [activeImg, setActiveImg] = useState(0)
+
   useEffect(() => {
-    const h = e => { if (e.key === 'Escape') onClose() }
+    setActiveImg(0)
+    const h = e => {
+      if (e.key === 'Escape') onClose()
+      if (e.key === 'ArrowRight') setActiveImg(i => (i + 1) % allImages.length)
+      if (e.key === 'ArrowLeft') setActiveImg(i => (i - 1 + allImages.length) % allImages.length)
+    }
     document.addEventListener('keydown', h)
     document.body.style.overflow = 'hidden'
     return () => { document.removeEventListener('keydown', h); document.body.style.overflow = '' }
-  }, [onClose])
+  }, [onClose, product])
+
   const msg = encodeURIComponent(`Bonjour SSI,\nJe suis intéressé par :\n*${product.name}*${product.storage ? '\nCapacité : ' + product.storage : ''}${product.color ? '\nCouleur : ' + product.color : ''}\nPrix : *${product.price.toLocaleString('fr-FR')} FCFA*\n\nEst-il disponible ?`)
   const bg = dark ? '#1e2130' : '#fff'
   const text = dark ? '#f1f5f9' : '#111'
   const text2 = dark ? '#94a3b8' : '#64748b'
   const border = dark ? '#2d3148' : '#e2e8f0'
   const tag = dark ? '#2d3148' : '#f1f5f9'
+
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.65)', zIndex: 300, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', backdropFilter: 'blur(4px)' }}>
       <div onClick={e => e.stopPropagation()} style={{ background: bg, width: '100%', maxWidth: 520, borderRadius: '24px 24px 0 0', maxHeight: '92vh', overflowY: 'auto', position: 'relative', animation: 'slideUp 0.3s cubic-bezier(0.34,1.56,0.64,1)' }}>
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4, background: 'linear-gradient(90deg,#1a56db,#16a34a)' }} />
+
+        {/* Gradient bar */}
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4, background: isRupture ? 'linear-gradient(90deg,#dc2626,#ef4444)' : 'linear-gradient(90deg,#1a56db,#16a34a)', zIndex: 2 }} />
+
+        {/* Close button */}
         <button onClick={onClose} style={{ position: 'absolute', top: 16, right: 16, zIndex: 10, background: dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)', color: dark ? '#fff' : '#333', border: 'none', borderRadius: '50%', width: 36, height: 36, fontSize: '0.9rem', cursor: 'pointer' }}>✕</button>
-        <div onClick={() => product.image_url && onImageClick(product.image_url, product.name)} style={{ height: 300, overflow: 'hidden', background: dark ? '#0f1117' : '#f0f4f8', cursor: product.image_url ? 'zoom-in' : 'default' }}>
-          {product.image_url
-            ? <img src={product.image_url} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.4s' }} onMouseEnter={e => e.target.style.transform = 'scale(1.04)'} onMouseLeave={e => e.target.style.transform = ''} />
-            : <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '4rem', opacity: 0.15 }}>💻</div>}
-          {product.image_url && <div style={{ position: 'absolute', bottom: 310 - 40, right: 12, background: 'rgba(0,0,0,0.45)', color: '#fff', borderRadius: 6, padding: '3px 10px', fontSize: '0.7rem', fontWeight: 600, backdropFilter: 'blur(4px)' }}> </div>}
+
+        {/* Image carousel */}
+        <div style={{ position: 'relative' }}>
+          <div
+            onClick={() => allImages[activeImg] && onImageClick(allImages[activeImg], product.name)}
+            style={{ height: 280, overflow: 'hidden', background: dark ? '#0f1117' : '#f0f4f8', cursor: allImages[activeImg] ? 'zoom-in' : 'default', position: 'relative' }}>
+            {allImages.length > 0
+              ? <img src={allImages[activeImg]} alt={product.name}
+                  key={activeImg}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', filter: isRupture ? 'grayscale(20%)' : 'none', animation: 'fadeImg 0.2s ease' }} />
+              : <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '4rem', opacity: 0.15 }}>💻</div>}
+
+            {/* Arrows */}
+            {allImages.length > 1 && <>
+              <button onClick={e => { e.stopPropagation(); setActiveImg(i => (i - 1 + allImages.length) % allImages.length) }}
+                style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.5)', color: '#fff', border: 'none', borderRadius: '50%', width: 34, height: 34, fontSize: '1.2rem', cursor: 'pointer', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 3 }}>‹</button>
+              <button onClick={e => { e.stopPropagation(); setActiveImg(i => (i + 1) % allImages.length) }}
+                style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.5)', color: '#fff', border: 'none', borderRadius: '50%', width: 34, height: 34, fontSize: '1.2rem', cursor: 'pointer', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 3 }}>›</button>
+              {/* Dots */}
+              <div style={{ position: 'absolute', bottom: 10, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 5, zIndex: 3 }}>
+                {allImages.map((_, i) => (
+                  <button key={i} onClick={e => { e.stopPropagation(); setActiveImg(i) }}
+                    style={{ width: i === activeImg ? 18 : 6, height: 6, borderRadius: 3, background: i === activeImg ? '#fff' : 'rgba(255,255,255,0.5)', border: 'none', cursor: 'pointer', transition: 'all 0.2s', padding: 0 }} />
+                ))}
+              </div>
+            </>}
+
+            {/* Counter badge */}
+            {allImages.length > 1 && (
+              <div style={{ position: 'absolute', top: 12, left: 12, background: 'rgba(0,0,0,0.5)', color: '#fff', borderRadius: 20, padding: '3px 10px', fontSize: '0.7rem', fontWeight: 600, backdropFilter: 'blur(4px)', zIndex: 3 }}>
+                {activeImg + 1} / {allImages.length}
+              </div>
+            )}
+          </div>
+
+          {/* Thumbnails */}
+          {allImages.length > 1 && (
+            <div style={{ display: 'flex', gap: 6, padding: '8px 12px', background: dark ? '#0a0c12' : '#f1f5f9', overflowX: 'auto' }}>
+              {allImages.map((img, i) => (
+                <button key={i} onClick={() => setActiveImg(i)}
+                  style={{ width: 52, height: 52, borderRadius: 8, overflow: 'hidden', border: `2px solid ${i === activeImg ? '#1a56db' : 'transparent'}`, flexShrink: 0, cursor: 'pointer', padding: 0, transition: 'border-color 0.2s', opacity: i === activeImg ? 1 : 0.6 }}>
+                  <img src={img} alt={`photo-${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
-        <div style={{ padding: '24px 24px 32px' }}>
+
+        {/* Content */}
+        <div style={{ padding: '20px 24px 32px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
             <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: text, lineHeight: 1.25, flex: 1, paddingRight: 16 }}>{product.name}</h2>
-          <span style={{
-  background: product.status === 'rupture' ? '#fef2f2' : '#f0fdf4',
-  border: `1.5px solid ${product.status === 'rupture' ? '#fecaca' : '#86efac'}`,
-  color: product.status === 'rupture' ? '#dc2626' : '#16a34a',
-  fontSize: '0.72rem', fontWeight: 700, padding: '4px 10px', 
-  borderRadius: 20, whiteSpace: 'nowrap', flexShrink: 0
-}}>
-  {product.status === 'rupture' ? '🔴 Rupture' : '✅ Disponible'}
-</span>
+            <span style={{
+              background: isRupture ? '#fef2f2' : '#f0fdf4',
+              border: `1.5px solid ${isRupture ? '#fecaca' : '#86efac'}`,
+              color: isRupture ? '#dc2626' : '#16a34a',
+              fontSize: '0.72rem', fontWeight: 700, padding: '4px 10px', borderRadius: 20, whiteSpace: 'nowrap', flexShrink: 0
+            }}>
+              {isRupture ? '🔴 Rupture' : '✅ Disponible'}
+            </span>
           </div>
+
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginBottom: 16 }}>
             {[product.brand, product.storage, product.color].filter(Boolean).map(t => (
               <span key={t} style={{ background: tag, border: `1px solid ${border}`, color: text2, fontSize: '0.8rem', fontWeight: 500, padding: '5px 12px', borderRadius: 20 }}>{t}</span>
             ))}
           </div>
-          {product.description && <p style={{ fontSize: '0.9rem', color: text2, lineHeight: 1.75, marginBottom: 20, borderLeft: `3px solid ${border}`, paddingLeft: 14 }}>{product.description}</p>}
+
+          {product.description && (
+            <p style={{ fontSize: '0.9rem', color: text2, lineHeight: 1.75, marginBottom: 20, borderLeft: `3px solid ${border}`, paddingLeft: 14 }}>{product.description}</p>
+          )}
+
           <div style={{ background: dark ? 'linear-gradient(135deg,rgba(26,86,219,0.15),rgba(22,163,74,0.1))' : 'linear-gradient(135deg,#eff6ff,#f0fdf4)', borderRadius: 14, padding: '16px 20px', marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
               <div style={{ fontSize: '0.72rem', color: text2, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>Prix</div>
-              <div style={{ fontSize: '1.9rem', fontWeight: 900, color: '#1a56db', letterSpacing: '-0.02em' }}>{product.price.toLocaleString('fr-FR')} <span style={{ fontSize: '1rem', fontWeight: 600 }}>FCFA</span></div>
+              <div style={{ fontSize: '1.9rem', fontWeight: 900, color: isRupture ? text2 : '#1a56db', letterSpacing: '-0.02em' }}>
+                {product.price.toLocaleString('fr-FR')} <span style={{ fontSize: '1rem', fontWeight: 600 }}>FCFA</span>
+              </div>
             </div>
             <div style={{ fontSize: '2.5rem', opacity: 0.15 }}>💰</div>
           </div>
-          <a href={`https://wa.me/${product.whatsapp_number || WHATSAPP}?text=${msg}`} target="_blank" rel="noreferrer"
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, background: 'linear-gradient(135deg,#16a34a,#15803d)', color: '#fff', borderRadius: 14, padding: '15px 20px', fontSize: '1rem', fontWeight: 700, textDecoration: 'none', boxShadow: '0 4px 16px rgba(22,163,74,0.35)' }}>
-            <span style={{ fontSize: '1.2rem' }}>💬</span> Contacter sur WhatsApp
-          </a>
+
+          {isRupture ? (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: dark ? '#2d3148' : '#f1f5f9', color: text2, borderRadius: 14, padding: '15px 20px', fontSize: '1rem', fontWeight: 700 }}>
+              🔴 Produit en rupture de stock
+            </div>
+          ) : (
+            <a href={`https://wa.me/${product.whatsapp_number || WHATSAPP}?text=${msg}`} target="_blank" rel="noreferrer"
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, background: 'linear-gradient(135deg,#16a34a,#15803d)', color: '#fff', borderRadius: 14, padding: '15px 20px', fontSize: '1rem', fontWeight: 700, textDecoration: 'none', boxShadow: '0 4px 16px rgba(22,163,74,0.35)' }}>
+              <span style={{ fontSize: '1.2rem' }}>💬</span> Contacter sur WhatsApp
+            </a>
+          )}
         </div>
       </div>
-      <style>{`@keyframes slideUp{from{transform:translateY(60px);opacity:0}to{transform:translateY(0);opacity:1}}`}</style>
+      <style>{`
+        @keyframes slideUp{from{transform:translateY(60px);opacity:0}to{transform:translateY(0);opacity:1}}
+        @keyframes fadeImg{from{opacity:0}to{opacity:1}}
+      `}</style>
     </div>
   )
 }
 
 function ProductCard({ product, onClick, onImageClick, index, dark }) {
+  const isRupture = product.status === 'rupture'
   const border = dark ? '#2d3148' : '#e8eef4'
   const bg = dark ? '#1a1d27' : '#fff'
   const text = dark ? '#f1f5f9' : '#111'
   const tag = dark ? '#2d3148' : '#f1f5f9'
   const tag2 = dark ? '#94a3b8' : '#64748b'
   return (
-    <div style={{ background: bg, border: `1px solid ${border}`, borderRadius: 16, overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: dark ? '0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(0,0,0,0.06)', transition: 'transform 0.22s,box-shadow 0.22s', animation: `fadeUp 0.4s ease ${index * 0.05}s both`, cursor: 'pointer' }}
+    <div style={{ background: bg, border: `1px solid ${border}`, borderRadius: 16, overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: dark ? '0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(0,0,0,0.06)', transition: 'transform 0.22s,box-shadow 0.22s', animation: `fadeUp 0.4s ease ${index * 0.05}s both`, cursor: 'pointer', opacity: isRupture ? 0.85 : 1 }}
       onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-5px)'; e.currentTarget.style.boxShadow = dark ? '0 12px 32px rgba(0,0,0,0.5)' : '0 12px 32px rgba(26,86,219,0.14)' }}
       onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = dark ? '0 2px 8px rgba(0,0,0,0.3)' : '0 2px 8px rgba(0,0,0,0.06)' }}
       onClick={() => onClick(product)}>
       <div style={{ position: 'relative', height: 200, background: dark ? '#0f1117' : 'linear-gradient(135deg,#f8fafc,#f1f5f9)', overflow: 'hidden', flexShrink: 0 }}
         onClick={e => { if (product.image_url) { e.stopPropagation(); onImageClick(product.image_url, product.name) } }}>
         {product.image_url
-          ? <img src={product.image_url} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.4s', display: 'block' }} onMouseEnter={e => e.target.style.transform = 'scale(1.07)'} onMouseLeave={e => e.target.style.transform = 'scale(1)'} />
+          ? <img src={product.image_url} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.4s', display: 'block', filter: isRupture ? 'grayscale(30%)' : 'none' }}
+              onMouseEnter={e => e.target.style.transform = 'scale(1.07)'}
+              onMouseLeave={e => e.target.style.transform = 'scale(1)'} />
           : <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
               <span style={{ fontSize: '2.5rem', opacity: 0.2 }}>💻</span>
               <span style={{ fontSize: '0.72rem', color: '#aaa', fontWeight: 500 }}>Pas d'image</span>
             </div>}
-        <span style={{ position: 'absolute', top: 10, left: 10, background: product.status === 'rupture' ? '#dc2626' : '#16a34a', color: '#fff', fontSize: '0.6rem', fontWeight: 800, padding: '3px 8px', borderRadius: 6, letterSpacing: '0.06em', boxShadow: product.status === 'rupture' ? '0 2px 6px rgba(220,38,38,0.4)' : '0 2px 6px rgba(22,163,74,0.4)' }}>{product.status === 'rupture' ? 'RUPTURE' : 'DISPO'}</span>
+        <span style={{ position: 'absolute', top: 10, left: 10, background: isRupture ? '#dc2626' : '#16a34a', color: '#fff', fontSize: '0.6rem', fontWeight: 800, padding: '3px 8px', borderRadius: 6, letterSpacing: '0.06em', boxShadow: isRupture ? '0 2px 6px rgba(220,38,38,0.4)' : '0 2px 6px rgba(22,163,74,0.4)' }}>
+          {isRupture ? 'RUPTURE' : 'DISPO'}
+        </span>
+        {/* Photo count badge */}
+        {Array.isArray(product.images) && product.images.length > 0 && (
+          <span style={{ position: 'absolute', bottom: 8, right: 8, background: 'rgba(0,0,0,0.55)', color: '#fff', fontSize: '0.6rem', fontWeight: 700, padding: '2px 7px', borderRadius: 10, backdropFilter: 'blur(4px)' }}>
+            📷 {product.images.length + 1}
+          </span>
+        )}
       </div>
       <div style={{ padding: '14px 14px 16px', display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
         <h3 style={{ fontSize: '0.92rem', fontWeight: 700, color: text, lineHeight: 1.35, margin: 0 }}>{product.name}</h3>
@@ -111,12 +196,16 @@ function ProductCard({ product, onClick, onImageClick, index, dark }) {
           {product.color && <span style={{ fontSize: '0.68rem', color: tag2, background: tag, padding: '2px 8px', borderRadius: 4, fontWeight: 500 }}>{product.color}</span>}
         </div>
         <div style={{ marginTop: 'auto' }}>
-          <div style={{ fontSize: '1.15rem', fontWeight: 900, color: '#1a56db', letterSpacing: '-0.01em', marginBottom: 10 }}>
+          <div style={{ fontSize: '1.15rem', fontWeight: 900, color: isRupture ? tag2 : '#1a56db', letterSpacing: '-0.01em', marginBottom: 10 }}>
             {product.price.toLocaleString('fr-FR')} <span style={{ fontSize: '0.75rem', fontWeight: 600, color: tag2 }}>FCFA</span>
           </div>
-          <button onClick={e => { e.stopPropagation(); if (product.status === 'rupture') return; const msg = encodeURIComponent(`Bonjour SSI,\nJe suis intéressé par *${product.name}*${product.storage ? ' - ' + product.storage : ''} à *${product.price.toLocaleString('fr-FR')} FCFA*.\n\nEst-il disponible ?`); window.open(`https://wa.me/${product.whatsapp_number || WHATSAPP}?text=${msg}`, '_blank') }}
-            style={{ width: '100%', background: product.status === 'rupture' ? '#e2e8f0' : 'linear-gradient(135deg,#16a34a,#15803d)', color: product.status === 'rupture' ? '#94a3b8' : '#fff', border: 'none', borderRadius: 10, padding: '10px 12px', fontSize: '0.82rem', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, cursor: product.status === 'rupture' ? 'not-allowed' : 'pointer', boxShadow: product.status === 'rupture' ? 'none' : '0 2px 8px rgba(22,163,74,0.3)', transition: 'transform 0.15s' }}>
-            {product.status === 'rupture' ? '🔴 Rupture de stock' : <><span>💬</span> Contacter sur WhatsApp</>}
+          <button onClick={e => {
+            e.stopPropagation()
+            if (isRupture) return
+            const msg = encodeURIComponent(`Bonjour SSI,\nJe suis intéressé par *${product.name}*${product.storage ? ' - ' + product.storage : ''} à *${product.price.toLocaleString('fr-FR')} FCFA*.\n\nEst-il disponible ?`)
+            window.open(`https://wa.me/${product.whatsapp_number || WHATSAPP}?text=${msg}`, '_blank')
+          }} style={{ width: '100%', background: isRupture ? (dark ? '#2d3148' : '#f1f5f9') : 'linear-gradient(135deg,#16a34a,#15803d)', color: isRupture ? tag2 : '#fff', border: 'none', borderRadius: 10, padding: '10px 12px', fontSize: '0.82rem', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, cursor: isRupture ? 'not-allowed' : 'pointer', boxShadow: isRupture ? 'none' : '0 2px 8px rgba(22,163,74,0.3)', transition: 'transform 0.15s' }}>
+            {isRupture ? '🔴 Rupture de stock' : <><span>💬</span> Contacter sur WhatsApp</>}
           </button>
         </div>
       </div>
@@ -139,7 +228,6 @@ export default function Catalogue() {
   useEffect(() => {
     try { const d = localStorage.getItem('ssi_dark_client'); if (d !== null) setDark(JSON.parse(d)) } catch {}
   }, [])
-
   useEffect(() => {
     try { localStorage.setItem('ssi_dark_client', JSON.stringify(dark)) } catch {}
   }, [dark])
@@ -174,7 +262,6 @@ export default function Catalogue() {
 
   const catCount = id => produits.filter(p => p.category_id === id).length
 
-  // Dark mode colors
   const D = {
     bg: dark ? '#0f1117' : '#f8fafc',
     surface: dark ? '#1a1d27' : '#fff',
@@ -189,7 +276,7 @@ export default function Catalogue() {
 
   if (loading) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: D.bg }}>
-      <div style={{ textAlign: 'center', fontFamily: 'system-ui,sans-serif' }}>
+      <div style={{ textAlign: 'center' }}>
         <div style={{ width: 56, height: 56, border: `3px solid ${D.border}`, borderTop: '3px solid #1a56db', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 16px' }} />
         <p style={{ color: D.text3, fontSize: '0.9rem' }}>Chargement du catalogue...</p>
         <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
@@ -201,23 +288,21 @@ export default function Catalogue() {
     <aside style={{ width: 230, minWidth: 230, background: D.surface, borderRight: `1px solid ${D.border}`, display: 'flex', flexDirection: 'column', height: '100vh', position: 'sticky', top: 0, overflowY: 'auto', transition: 'background 0.25s,border-color 0.25s' }}>
       <div style={{ padding: '20px 16px 16px', borderBottom: `1px solid ${D.border2}` }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 46, height: 46, borderRadius: '50%', overflow: 'hidden', border: `2.5px solid ${D.border}`, flexShrink: 0, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+          <div style={{ width: 46, height: 46, borderRadius: '50%', overflow: 'hidden', border: `2.5px solid ${D.border}`, flexShrink: 0 }}>
             <img src="/logo.png" alt="SSI" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           </div>
           <div>
-            <div style={{ fontWeight: 800, fontSize: '0.82rem', color: D.text, letterSpacing: '-0.01em' }}>S.S.I</div>
+            <div style={{ fontWeight: 800, fontSize: '0.82rem', color: D.text }}>S.S.I</div>
             <div style={{ fontSize: '0.62rem', color: D.text3, textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 600 }}>INFORMATIQUE</div>
           </div>
         </div>
       </div>
-
       <nav style={{ flex: 1, padding: '10px 8px' }}>
         <div style={{ fontSize: '0.65rem', fontWeight: 700, color: D.text3, textTransform: 'uppercase', letterSpacing: '0.1em', padding: '8px 8px 6px' }}>Navigation</div>
         <button onClick={() => { setShowHero(true); setActiveCategory(categories[0]?.id); setSidebarOpen(false) }}
           style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, background: showHero ? (dark ? 'rgba(26,86,219,0.2)' : 'linear-gradient(135deg,#eff6ff,#e0f2fe)') : 'none', border: showHero ? '1px solid #bfdbfe' : '1px solid transparent', color: showHero ? '#3b82f6' : D.text2, fontSize: '0.875rem', fontWeight: showHero ? 700 : 500, cursor: 'pointer', width: '100%', textAlign: 'left', marginBottom: 2, transition: 'all 0.15s' }}>
           <span style={{ fontSize: '1.1rem' }}>🏪</span> Boutique
         </button>
-
         <div style={{ fontSize: '0.65rem', fontWeight: 700, color: D.text3, textTransform: 'uppercase', letterSpacing: '0.1em', padding: '12px 8px 6px', marginTop: 4 }}>Catégories</div>
         {categories.filter(c => catCount(c.id) > 0).map(cat => {
           const isActive = activeCategory === cat.id && !showHero
@@ -231,9 +316,7 @@ export default function Catalogue() {
           )
         })}
       </nav>
-
       <div style={{ padding: '12px 8px', borderTop: `1px solid ${D.border2}`, display: 'flex', flexDirection: 'column', gap: 6 }}>
-        {/* Dark mode toggle */}
         <button onClick={() => setDark(d => !d)}
           style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderRadius: 10, background: dark ? 'rgba(251,191,36,0.1)' : 'rgba(0,0,0,0.04)', border: `1px solid ${D.border}`, color: dark ? '#fbbf24' : D.text2, fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', width: '100%', textAlign: 'left', transition: 'all 0.2s' }}>
           <span style={{ fontSize: '1.1rem' }}>{dark ? '☀️' : '🌙'}</span>
@@ -243,7 +326,7 @@ export default function Catalogue() {
           </span>
         </button>
         <a href={`https://wa.me/${WHATSAPP}`} target="_blank" rel="noreferrer"
-          style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderRadius: 10, background: dark ? 'rgba(22,163,74,0.15)' : 'linear-gradient(135deg,#f0fdf4,#dcfce7)', border: '1px solid #bbf7d0', color: '#15803d', fontSize: '0.85rem', fontWeight: 700, textDecoration: 'none', transition: 'transform 0.15s' }}>
+          style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderRadius: 10, background: dark ? 'rgba(22,163,74,0.15)' : 'linear-gradient(135deg,#f0fdf4,#dcfce7)', border: '1px solid #bbf7d0', color: '#15803d', fontSize: '0.85rem', fontWeight: 700, textDecoration: 'none' }}>
           <span>💬</span> WhatsApp
         </a>
         <div style={{ padding: '8px 12px', fontSize: '0.7rem', color: D.text3, lineHeight: 1.6, background: dark ? 'rgba(255,255,255,0.03)' : '#fafafa', borderRadius: 10, border: `1px solid ${D.border2}` }}>
@@ -264,8 +347,8 @@ export default function Catalogue() {
 
       <div style={{ display: 'flex', minHeight: '100vh', background: D.bg, fontFamily: "'Plus Jakarta Sans',system-ui,sans-serif", transition: 'background 0.25s' }}>
         <div className="sidebar-wrap">{sidebar}</div>
-
         <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', background: D.surface, transition: 'background 0.25s' }}>
+
           {/* Mobile topbar */}
           <div className="mobile-topbar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: D.surface, borderBottom: `1px solid ${D.border}`, position: 'sticky', top: 0, zIndex: 100, boxShadow: dark ? '0 1px 8px rgba(0,0,0,0.3)' : '0 1px 8px rgba(0,0,0,0.06)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -277,23 +360,19 @@ export default function Catalogue() {
               </div>
             </div>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              <button onClick={() => setDark(d => !d)} style={{ background: dark ? 'rgba(251,191,36,0.15)' : D.border2, border: 'none', borderRadius: 8, padding: '7px 10px', fontSize: '1rem', cursor: 'pointer' }}>
-                {dark ? '☀️' : '🌙'}
-              </button>
-              <a href={`https://wa.me/${WHATSAPP}`} target="_blank" rel="noreferrer" style={{ background: 'linear-gradient(135deg,#16a34a,#15803d)', color: '#fff', borderRadius: 10, padding: '8px 14px', fontSize: '0.78rem', fontWeight: 700, textDecoration: 'none' }}>
-                💬 WhatsApp
-              </a>
+              <button onClick={() => setDark(d => !d)} style={{ background: dark ? 'rgba(251,191,36,0.15)' : D.border2, border: 'none', borderRadius: 8, padding: '7px 10px', fontSize: '1rem', cursor: 'pointer' }}>{dark ? '☀️' : '🌙'}</button>
+              <a href={`https://wa.me/${WHATSAPP}`} target="_blank" rel="noreferrer" style={{ background: 'linear-gradient(135deg,#16a34a,#15803d)', color: '#fff', borderRadius: 10, padding: '8px 14px', fontSize: '0.78rem', fontWeight: 700, textDecoration: 'none' }}>💬 WhatsApp</a>
             </div>
           </div>
 
           {/* Desktop header */}
           <div className="desktop-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 28px', borderBottom: `1px solid ${D.border}`, background: D.surface }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-              <div style={{ width: 50, height: 50, borderRadius: '50%', overflow: 'hidden', border: `2.5px solid ${D.border}`, flexShrink: 0, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+              <div style={{ width: 50, height: 50, borderRadius: '50%', overflow: 'hidden', border: `2.5px solid ${D.border}`, flexShrink: 0 }}>
                 <img src="/logo.png" alt="SSI" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               </div>
               <div>
-                <div style={{ fontWeight: 800, fontSize: '1rem', color: D.text, letterSpacing: '-0.01em' }}>SEYE SENGHOR INFORMATIQUE</div>
+                <div style={{ fontWeight: 800, fontSize: '1rem', color: D.text }}>SEYE SENGHOR INFORMATIQUE</div>
                 <div style={{ fontSize: '0.78rem', color: D.text2 }}>💻 Vente ordinateur et accessoires Informatique</div>
               </div>
             </div>
@@ -345,7 +424,7 @@ export default function Catalogue() {
                   <strong style={{ color: '#fff' }}>💻 Ordinateurs · Smartphones · Accessoires</strong>
                 </p>
                 <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
-                  {['Large choix d\'ordinateurs et accessoires', 'Produits testés, garantis et prêts à l\'utilisation', 'Livraison et installation disponibles', 'Meilleurs prix du marché à Dakar'].map(t => (
+                  {["Large choix d'ordinateurs et accessoires", "Produits testés, garantis et prêts à l'utilisation", 'Livraison et installation disponibles', 'Meilleurs prix du marché à Dakar'].map(t => (
                     <li key={t} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: '0.85rem', color: '#e2e8f0' }}>
                       <span style={{ color: '#4ade80', fontSize: '0.75rem' }}>✔</span> {t}
                     </li>
@@ -362,7 +441,7 @@ export default function Catalogue() {
                   <button onClick={() => setShowHero(false)} style={{ flex: 1, minWidth: 160, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 14, padding: '14px 20px', color: '#fff', fontSize: '0.875rem', fontWeight: 700, cursor: 'pointer', lineHeight: 1.6, textAlign: 'center', backdropFilter: 'blur(8px)' }}>
                     🗂 Catalogue<br /><small style={{ fontWeight: 400, color: 'rgba(255,255,255,0.6)', fontSize: '0.72rem', display: 'block' }}>Parcourez votre modèle</small>
                   </button>
-                  <a href={`https://wa.me/${WHATSAPP}`} target="_blank" rel="noreferrer" style={{ flex: 1, minWidth: 160, background: 'linear-gradient(135deg,#16a34a,#15803d)', border: 'none', borderRadius: 14, padding: '14px 20px', color: '#fff', fontSize: '0.875rem', fontWeight: 700, cursor: 'pointer', lineHeight: 1.6, textDecoration: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 16px rgba(22,163,74,0.4)' }}>
+                  <a href={`https://wa.me/${WHATSAPP}`} target="_blank" rel="noreferrer" style={{ flex: 1, minWidth: 160, background: 'linear-gradient(135deg,#16a34a,#15803d)', border: 'none', borderRadius: 14, padding: '14px 20px', color: '#fff', fontSize: '0.875rem', fontWeight: 700, lineHeight: 1.6, textDecoration: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 16px rgba(22,163,74,0.4)' }}>
                     💬 WhatsApp<br /><small style={{ fontWeight: 400, color: 'rgba(255,255,255,0.7)', fontSize: '0.72rem' }}>Commandez directement</small>
                   </a>
                 </div>

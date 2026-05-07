@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import Head from 'next/head'
 import { supabase } from '../lib/supabase'
+import { Store, MessageCircle, Moon, Sun, MapPin, Phone, Package, Search, ChevronLeft, ChevronRight, Tag, Cpu, CheckCircle, Flame, Lock } from 'lucide-react'
 
 const WHATSAPP = '221777042635'
 
@@ -69,9 +70,13 @@ function ProductModal({ product, onClose, onImageClick, dark }) {
             {/* Arrows */}
             {allImages.length > 1 && <>
               <button onClick={e => { e.stopPropagation(); setActiveImg(i => (i - 1 + allImages.length) % allImages.length) }}
-                style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.5)', color: '#fff', border: 'none', borderRadius: '50%', width: 34, height: 34, fontSize: '1.2rem', cursor: 'pointer', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 3 }}>‹</button>
+                style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.5)', color: '#fff', border: 'none', borderRadius: '50%', width: 34, height: 34, cursor: 'pointer', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 3 }}>
+                <ChevronLeft size={18} />
+              </button>
               <button onClick={e => { e.stopPropagation(); setActiveImg(i => (i + 1) % allImages.length) }}
-                style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.5)', color: '#fff', border: 'none', borderRadius: '50%', width: 34, height: 34, fontSize: '1.2rem', cursor: 'pointer', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 3 }}>›</button>
+                style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'rgba(0,0,0,0.5)', color: '#fff', border: 'none', borderRadius: '50%', width: 34, height: 34, cursor: 'pointer', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 3 }}>
+                <ChevronRight size={18} />
+              </button>
               {/* Dots */}
               <div style={{ position: 'absolute', bottom: 10, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 5, zIndex: 3 }}>
                 {allImages.map((_, i) => (
@@ -301,7 +306,10 @@ export default function Catalogue() {
         <div style={{ fontSize: '0.65rem', fontWeight: 700, color: D.text3, textTransform: 'uppercase', letterSpacing: '0.1em', padding: '8px 8px 6px' }}>Navigation</div>
         <button onClick={() => { setShowHero(true); setActiveCategory(categories[0]?.id); setSidebarOpen(false) }}
           style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, background: showHero ? (dark ? 'rgba(26,86,219,0.2)' : 'linear-gradient(135deg,#eff6ff,#e0f2fe)') : 'none', border: showHero ? '1px solid #bfdbfe' : '1px solid transparent', color: showHero ? '#3b82f6' : D.text2, fontSize: '0.875rem', fontWeight: showHero ? 700 : 500, cursor: 'pointer', width: '100%', textAlign: 'left', marginBottom: 2, transition: 'all 0.15s' }}>
-          <span style={{ fontSize: '1.1rem' }}>🏪</span> Boutique
+          <span style={{ width: 28, height: 28, borderRadius: 7, background: showHero ? '#3b82f6' : 'rgba(59,130,246,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <Store size={14} style={{ color: showHero ? '#fff' : '#3b82f6' }} />
+          </span>
+          Boutique
         </button>
         <div style={{ fontSize: '0.65rem', fontWeight: 700, color: D.text3, textTransform: 'uppercase', letterSpacing: '0.1em', padding: '12px 8px 6px', marginTop: 4 }}>Catégories</div>
         {categories.filter(c => catCount(c.id) > 0).map(cat => {
@@ -318,19 +326,29 @@ export default function Catalogue() {
       </nav>
       <div style={{ padding: '12px 8px', borderTop: `1px solid ${D.border2}`, display: 'flex', flexDirection: 'column', gap: 6 }}>
         <button onClick={() => setDark(d => !d)}
-          style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderRadius: 10, background: dark ? 'rgba(251,191,36,0.1)' : 'rgba(0,0,0,0.04)', border: `1px solid ${D.border}`, color: dark ? '#fbbf24' : D.text2, fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', width: '100%', textAlign: 'left', transition: 'all 0.2s' }}>
-          <span style={{ fontSize: '1.1rem' }}>{dark ? '☀️' : '🌙'}</span>
+          style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 10, background: dark ? 'rgba(251,191,36,0.1)' : 'rgba(0,0,0,0.04)', border: `1px solid ${D.border}`, color: dark ? '#fbbf24' : D.text2, fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', width: '100%', textAlign: 'left', transition: 'all 0.2s' }}>
+          <span style={{ width: 28, height: 28, borderRadius: 7, background: 'rgba(251,191,36,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            {dark ? <Sun size={14} style={{ color: '#fbbf24' }} /> : <Moon size={14} style={{ color: '#fbbf24' }} />}
+          </span>
           {dark ? 'Mode clair' : 'Mode sombre'}
           <span style={{ marginLeft: 'auto', width: 36, height: 20, background: dark ? '#fbbf24' : D.border, borderRadius: 20, position: 'relative', transition: 'background 0.2s', flexShrink: 0 }}>
             <span style={{ position: 'absolute', top: 2, left: dark ? 18 : 2, width: 16, height: 16, background: '#fff', borderRadius: '50%', transition: 'left 0.2s', boxShadow: '0 1px 4px rgba(0,0,0,0.3)' }} />
           </span>
         </button>
         <a href={`https://wa.me/${WHATSAPP}`} target="_blank" rel="noreferrer"
-          style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderRadius: 10, background: dark ? 'rgba(22,163,74,0.15)' : 'linear-gradient(135deg,#f0fdf4,#dcfce7)', border: '1px solid #bbf7d0', color: '#15803d', fontSize: '0.85rem', fontWeight: 700, textDecoration: 'none' }}>
-          <span>💬</span> WhatsApp
+          style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 10, background: dark ? 'rgba(22,163,74,0.15)' : 'linear-gradient(135deg,#f0fdf4,#dcfce7)', border: '1px solid #bbf7d0', color: '#15803d', fontSize: '0.85rem', fontWeight: 700, textDecoration: 'none' }}>
+          <span style={{ width: 28, height: 28, borderRadius: 7, background: 'rgba(22,163,74,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <MessageCircle size={14} style={{ color: '#16a34a' }} />
+          </span>
+          WhatsApp
         </a>
-        <div style={{ padding: '8px 12px', fontSize: '0.7rem', color: D.text3, lineHeight: 1.6, background: dark ? 'rgba(255,255,255,0.03)' : '#fafafa', borderRadius: 10, border: `1px solid ${D.border2}` }}>
-          📍 Keur Massar, rond-point<br />☎️ +221 777042635
+        <div style={{ padding: '10px 14px', fontSize: '0.72rem', color: D.text3, lineHeight: 1.8, background: dark ? 'rgba(255,255,255,0.03)' : '#fafafa', borderRadius: 10, border: `1px solid ${D.border2}`, display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <MapPin size={11} style={{ flexShrink: 0 }} /> Keur Massar, rond-point
+          </span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Phone size={11} style={{ flexShrink: 0 }} /> +221 777042635
+          </span>
         </div>
       </div>
     </aside>
@@ -360,8 +378,12 @@ export default function Catalogue() {
               </div>
             </div>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              <button onClick={() => setDark(d => !d)} style={{ background: dark ? 'rgba(251,191,36,0.15)' : D.border2, border: 'none', borderRadius: 8, padding: '7px 10px', fontSize: '1rem', cursor: 'pointer' }}>{dark ? '☀️' : '🌙'}</button>
-              <a href={`https://wa.me/${WHATSAPP}`} target="_blank" rel="noreferrer" style={{ background: 'linear-gradient(135deg,#16a34a,#15803d)', color: '#fff', borderRadius: 10, padding: '8px 14px', fontSize: '0.78rem', fontWeight: 700, textDecoration: 'none' }}>💬 WhatsApp</a>
+              <button onClick={() => setDark(d => !d)} style={{ background: dark ? 'rgba(251,191,36,0.15)' : D.border2, border: 'none', borderRadius: 8, padding: '7px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {dark ? <Sun size={16} style={{ color: '#fbbf24' }} /> : <Moon size={16} style={{ color: D.text2 }} />}
+              </button>
+              <a href={`https://wa.me/${WHATSAPP}`} target="_blank" rel="noreferrer" style={{ background: 'linear-gradient(135deg,#16a34a,#15803d)', color: '#fff', borderRadius: 10, padding: '8px 14px', fontSize: '0.78rem', fontWeight: 700, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <MessageCircle size={14} /> WhatsApp
+              </a>
             </div>
           </div>
 
@@ -377,14 +399,14 @@ export default function Catalogue() {
               </div>
             </div>
             <a href={`https://wa.me/${WHATSAPP}`} target="_blank" rel="noreferrer" style={{ background: 'linear-gradient(135deg,#16a34a,#15803d)', color: '#fff', borderRadius: 12, padding: '11px 22px', fontSize: '0.9rem', fontWeight: 700, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 8, boxShadow: '0 4px 14px rgba(22,163,74,0.35)' }}>
-              <span>💬</span> WhatsApp
+              <MessageCircle size={18} /> WhatsApp
             </a>
           </div>
 
           {/* Search */}
           <div style={{ padding: '14px 28px', borderBottom: `1px solid ${D.border}`, background: D.surface2 }}>
             <div style={{ position: 'relative', maxWidth: 560 }}>
-              <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', fontSize: '0.9rem', pointerEvents: 'none', color: D.text3 }}>🔍</span>
+              <Search size={16} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: D.text3, pointerEvents: 'none' }} />
               <input value={search} onChange={e => { setSearch(e.target.value); if (e.target.value) setShowHero(false) }}
                 placeholder="Rechercher un produit, une marque..."
                 style={{ width: '100%', border: `1.5px solid ${D.border}`, borderRadius: 12, padding: '11px 14px 11px 40px', fontSize: '0.9rem', background: D.surface, outline: 'none', color: D.text, fontFamily: 'inherit', transition: 'border-color 0.2s' }}
@@ -421,28 +443,34 @@ export default function Catalogue() {
                 </div>
                 <p style={{ fontSize: '0.875rem', color: '#cbd5e1', lineHeight: 1.7, marginBottom: 14 }}>
                   Votre magasin de matériel informatique à Keur Massar :<br />
-                  <strong style={{ color: '#fff' }}>💻 Ordinateurs · Smartphones · Accessoires</strong>
+                  <strong style={{ color: '#fff' }}><Cpu size={14} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} />Ordinateurs · Smartphones · Accessoires</strong>
                 </p>
                 <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
                   {["Large choix d'ordinateurs et accessoires", "Produits testés, garantis et prêts à l'utilisation", 'Livraison et installation disponibles', 'Meilleurs prix du marché à Dakar'].map(t => (
                     <li key={t} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: '0.85rem', color: '#e2e8f0' }}>
-                      <span style={{ color: '#4ade80', fontSize: '0.75rem' }}>✔</span> {t}
+                      <CheckCircle size={14} style={{ color: '#4ade80', flexShrink: 0 }} /> {t}
                     </li>
                   ))}
                 </ul>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 16 }}>
-                  <span style={{ fontSize: '0.78rem', color: '#94a3b8' }}>📍 Keur Massar au rond-point, Dakar</span>
-                  <span style={{ fontSize: '0.78rem', color: '#94a3b8' }}>☎️ +221 777042635</span>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, marginBottom: 16 }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.78rem', color: '#94a3b8' }}>
+                    <MapPin size={13} style={{ color: '#64748b' }} /> Keur Massar au rond-point, Dakar
+                  </span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.78rem', color: '#94a3b8' }}>
+                    <Phone size={13} style={{ color: '#64748b' }} /> +221 777042635
+                  </span>
                 </div>
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(217,119,6,0.2)', border: '1px solid rgba(251,191,36,0.4)', color: '#fbbf24', fontSize: '0.78rem', fontWeight: 700, padding: '6px 14px', borderRadius: 20, marginBottom: 24 }}>
-                  🔥 Nouveaux arrivages chaque semaine
+                  <Flame size={13} /> Nouveaux arrivages chaque semaine
                 </div>
                 <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                  <button onClick={() => setShowHero(false)} style={{ flex: 1, minWidth: 160, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 14, padding: '14px 20px', color: '#fff', fontSize: '0.875rem', fontWeight: 700, cursor: 'pointer', lineHeight: 1.6, textAlign: 'center', backdropFilter: 'blur(8px)' }}>
-                    🗂 Catalogue<br /><small style={{ fontWeight: 400, color: 'rgba(255,255,255,0.6)', fontSize: '0.72rem', display: 'block' }}>Parcourez votre modèle</small>
+                  <button onClick={() => setShowHero(false)} style={{ flex: 1, minWidth: 160, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 14, padding: '14px 20px', color: '#fff', fontSize: '0.875rem', fontWeight: 700, cursor: 'pointer', lineHeight: 1.6, textAlign: 'center', backdropFilter: 'blur(8px)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                    <Package size={18} style={{ opacity: 0.8 }} />
+                    Catalogue<br /><small style={{ fontWeight: 400, color: 'rgba(255,255,255,0.6)', fontSize: '0.72rem', display: 'block' }}>Parcourez votre modèle</small>
                   </button>
-                  <a href={`https://wa.me/${WHATSAPP}`} target="_blank" rel="noreferrer" style={{ flex: 1, minWidth: 160, background: 'linear-gradient(135deg,#16a34a,#15803d)', border: 'none', borderRadius: 14, padding: '14px 20px', color: '#fff', fontSize: '0.875rem', fontWeight: 700, lineHeight: 1.6, textDecoration: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 16px rgba(22,163,74,0.4)' }}>
-                    💬 WhatsApp<br /><small style={{ fontWeight: 400, color: 'rgba(255,255,255,0.7)', fontSize: '0.72rem' }}>Commandez directement</small>
+                  <a href={`https://wa.me/${WHATSAPP}`} target="_blank" rel="noreferrer" style={{ flex: 1, minWidth: 160, background: 'linear-gradient(135deg,#16a34a,#15803d)', border: 'none', borderRadius: 14, padding: '14px 20px', color: '#fff', fontSize: '0.875rem', fontWeight: 700, lineHeight: 1.6, textDecoration: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, boxShadow: '0 4px 16px rgba(22,163,74,0.4)' }}>
+                    <MessageCircle size={18} style={{ opacity: 0.9 }} />
+                    WhatsApp<br /><small style={{ fontWeight: 400, color: 'rgba(255,255,255,0.7)', fontSize: '0.72rem' }}>Commandez directement</small>
                   </a>
                 </div>
               </div>
@@ -480,8 +508,12 @@ export default function Catalogue() {
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 10 }}>
-                <a href={`https://wa.me/${WHATSAPP}`} target="_blank" rel="noreferrer" style={{ background: '#16a34a', color: '#fff', borderRadius: 10, padding: '9px 18px', fontSize: '0.82rem', fontWeight: 700, textDecoration: 'none' }}>💬 WhatsApp</a>
-                <a href="/login" style={{ background: 'rgba(255,255,255,0.08)', color: '#94a3b8', borderRadius: 10, padding: '9px 16px', fontSize: '0.82rem', fontWeight: 500, textDecoration: 'none' }}>🔐 Admin</a>
+                <a href={`https://wa.me/${WHATSAPP}`} target="_blank" rel="noreferrer" style={{ background: '#16a34a', color: '#fff', borderRadius: 10, padding: '9px 18px', fontSize: '0.82rem', fontWeight: 700, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <MessageCircle size={14} /> WhatsApp
+                </a>
+                <a href="/login" style={{ background: 'rgba(255,255,255,0.08)', color: '#94a3b8', borderRadius: 10, padding: '9px 16px', fontSize: '0.82rem', fontWeight: 500, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <Lock size={13} /> Admin
+                </a>
               </div>
             </div>
           </footer>
